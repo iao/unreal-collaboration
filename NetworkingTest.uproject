@@ -1,0 +1,13 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "{8F5D2646-47DE-BF51-11CF-80B30269FE18}",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "NetworkingTest",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
