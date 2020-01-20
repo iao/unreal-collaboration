@@ -3,15 +3,18 @@
 #include "NetworkingTestGameMode.h"
 #include "NetworkingTestHUD.h"
 #include "NetworkingTestCharacter.h"
+#include "MyPlayerController.h"
 #include "UObject/ConstructorHelpers.h"
 
-ANetworkingTestGameMode::ANetworkingTestGameMode()
-	: Super()
-{
+ANetworkingTestGameMode::ANetworkingTestGameMode() : Super() {
+	// set our player controller to our own one
+	PlayerControllerClass = AMyPlayerController::StaticClass();
+	
 	// set default pawn class to our Blueprinted character
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(TEXT("/Game/FirstPersonCPP/Blueprints/FirstPersonCharacter"));
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(
+		TEXT("/Game/FirstPersonCPP/Blueprints/MyCubePawn"));
 	DefaultPawnClass = PlayerPawnClassFinder.Class;
-
+	
 	// use our custom HUD class
 	HUDClass = ANetworkingTestHUD::StaticClass();
 }

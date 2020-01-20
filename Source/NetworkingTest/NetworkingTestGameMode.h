@@ -7,13 +7,9 @@
 #include "NetworkingTestGameMode.generated.h"
 
 UCLASS(minimalapi)
-class ANetworkingTestGameMode : public AGameModeBase
-{
+class ANetworkingTestGameMode : public AGameModeBase {
 	GENERATED_BODY()
 
 public:
 	ANetworkingTestGameMode();
 };
-
-
-

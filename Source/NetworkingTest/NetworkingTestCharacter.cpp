@@ -17,8 +17,7 @@ DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 //////////////////////////////////////////////////////////////////////////
 // ANetworkingTestCharacter
 
-ANetworkingTestCharacter::ANetworkingTestCharacter()
-{
+ANetworkingTestCharacter::ANetworkingTestCharacter() {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.0f, 96.0f);
 	if (IsRunningClientOnly()) GetCapsuleComponent()->SetHiddenInGame(false, true);
@@ -41,7 +40,7 @@ ANetworkingTestCharacter::ANetworkingTestCharacter()
 	Mesh1P->CastShadow = false;
 	Mesh1P->RelativeRotation = FRotator(1.9f, -19.19f, 5.2f);
 	Mesh1P->RelativeLocation = FVector(-0.5f, -4.4f, -155.7f);
-	
+
 	// Create a gun mesh component
 	FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
 	FP_Gun->bCastDynamicShadow = false;
@@ -77,28 +76,25 @@ ANetworkingTestCharacter::ANetworkingTestCharacter()
 	VR_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("VR_MuzzleLocation"));
 	VR_MuzzleLocation->SetupAttachment(VR_Gun);
 	VR_MuzzleLocation->SetRelativeLocation(FVector(0.000004, 53.999992, 10.000000));
-	VR_MuzzleLocation->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));		// Counteract the rotation of the VR gun model.
+	VR_MuzzleLocation->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f)); // Counteract the rotation of the VR gun model.
 
 	// Uncomment the following line to turn motion controllers on by default:
 	//bUsingMotionControllers = true;
 }
 
-void ANetworkingTestCharacter::BeginPlay()
-{
+void ANetworkingTestCharacter::BeginPlay() {
 	// Call the base class  
 	Super::BeginPlay();
 
 	//Attach gun mesh component to Skeleton, doing it here because the skeleton is not yet created in the constructor
-	FP_Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
+	FP_Gun->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true),
+	                          TEXT("GripPoint"));
 
 	// Show or hide the two versions of the gun based on whether or not we're using motion controllers.
-	if (bUsingMotionControllers)
-	{
+	if (bUsingMotionControllers) {
 		VR_Gun->SetHiddenInGame(false, true);
 		Mesh1P->SetHiddenInGame(true, true);
-	}
-	else
-	{
+	} else {
 		VR_Gun->SetHiddenInGame(true, true);
 		Mesh1P->SetHiddenInGame(false, true);
 	}
@@ -107,8 +103,7 @@ void ANetworkingTestCharacter::BeginPlay()
 //////////////////////////////////////////////////////////////////////////
 // Input
 
-void ANetworkingTestCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
-{
+void ANetworkingTestCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) {
 	// set up gameplay key bindings
 	check(PlayerInputComponent);
 
@@ -137,53 +132,44 @@ void ANetworkingTestCharacter::SetupPlayerInputComponent(class UInputComponent* 
 	PlayerInputComponent->BindAxis("LookUpRate", this, &ANetworkingTestCharacter::LookUpAtRate);
 }
 
-void ANetworkingTestCharacter::OnFire()
-{
+void ANetworkingTestCharacter::OnFire() {
 	// try and fire a projectile
 	ServerFire();
 
 	// try and play the sound if specified
-	if (FireSound != NULL)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
-	}
+	if (FireSound != NULL) UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
 
 	// try and play a firing animation if specified
-	if (FireAnimation != NULL)
-	{
+	if (FireAnimation != NULL) {
 		// Get the animation object for the arms mesh
 		UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
-		if (AnimInstance != NULL)
-		{
-			AnimInstance->Montage_Play(FireAnimation, 1.f);
-		}
+		if (AnimInstance != NULL) AnimInstance->Montage_Play(FireAnimation, 1.f);
 	}
 }
 
 void ANetworkingTestCharacter::ServerFire_Implementation() {
-	if (ProjectileClass != NULL)
-	{
+	if (ProjectileClass != NULL) {
 		UWorld* const World = GetWorld();
-		if (World != NULL)
-		{
-			if (bUsingMotionControllers)
-			{
+		if (World != NULL) {
+			if (bUsingMotionControllers) {
 				const FRotator SpawnRotation = VR_MuzzleLocation->GetComponentRotation();
 				const FVector SpawnLocation = VR_MuzzleLocation->GetComponentLocation();
 				World->SpawnActor<ANetworkingTestProjectile>(ProjectileClass, SpawnLocation, SpawnRotation);
-			}
-			else
-			{
+			} else {
 				const FRotator SpawnRotation = GetControlRotation();
+				
 				// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+				const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr)
+					                               ? FP_MuzzleLocation->GetComponentLocation()
+					                               : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
 
 				//Set Spawn Collision Handling Override
 				FActorSpawnParameters ActorSpawnParams;
 				ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 
 				// Spawn the projectile at the muzzle
-				World->SpawnActor<ANetworkingTestProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+				World->SpawnActor<ANetworkingTestProjectile>(ProjectileClass, SpawnLocation, SpawnRotation,
+				                                             ActorSpawnParams);
 			}
 		}
 	}
@@ -193,12 +179,10 @@ bool ANetworkingTestCharacter::ServerFire_Validate() {
 	return true;
 }
 
-void ANetworkingTestCharacter::Tick(float DeltaTime)
-{
+void ANetworkingTestCharacter::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
 
-	if (!IsLocallyControlled())
-	{
+	if (!IsLocallyControlled()) {
 		FRotator NewRot = FirstPersonCameraComponent->RelativeRotation;
 		NewRot.Pitch = RemoteViewPitch * 360.0f / 255.0f;
 
@@ -206,33 +190,22 @@ void ANetworkingTestCharacter::Tick(float DeltaTime)
 	}
 }
 
-void ANetworkingTestCharacter::OnResetVR()
-{
+void ANetworkingTestCharacter::OnResetVR() {
 	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 }
 
-void ANetworkingTestCharacter::BeginTouch(const ETouchIndex::Type FingerIndex, const FVector Location)
-{
-	if (TouchItem.bIsPressed == true)
-	{
-		return;
-	}
-	if ((FingerIndex == TouchItem.FingerIndex) && (TouchItem.bMoved == false))
-	{
-		OnFire();
-	}
+void ANetworkingTestCharacter::BeginTouch(const ETouchIndex::Type FingerIndex, const FVector Location) {
+	if (TouchItem.bIsPressed == true) return;
+	if ((FingerIndex == TouchItem.FingerIndex) && (TouchItem.bMoved == false)) OnFire();
+	
 	TouchItem.bIsPressed = true;
 	TouchItem.FingerIndex = FingerIndex;
 	TouchItem.Location = Location;
 	TouchItem.bMoved = false;
 }
 
-void ANetworkingTestCharacter::EndTouch(const ETouchIndex::Type FingerIndex, const FVector Location)
-{
-	if (TouchItem.bIsPressed == false)
-	{
-		return;
-	}
+void ANetworkingTestCharacter::EndTouch(const ETouchIndex::Type FingerIndex, const FVector Location) {
+	if (TouchItem.bIsPressed == false) return;
 	TouchItem.bIsPressed = false;
 }
 
@@ -274,47 +247,37 @@ void ANetworkingTestCharacter::EndTouch(const ETouchIndex::Type FingerIndex, con
 //	}
 //}
 
-void ANetworkingTestCharacter::MoveForward(float Value)
-{
-	if (Value != 0.0f)
-	{
+void ANetworkingTestCharacter::MoveForward(float Value) {
+	if (Value != 0.0f) {
 		// add movement in that direction
 		AddMovementInput(GetActorForwardVector(), Value);
 	}
 }
 
-void ANetworkingTestCharacter::MoveRight(float Value)
-{
-	if (Value != 0.0f)
-	{
+void ANetworkingTestCharacter::MoveRight(float Value) {
+	if (Value != 0.0f) {
 		// add movement in that direction
 		AddMovementInput(GetActorRightVector(), Value);
 	}
 }
 
-void ANetworkingTestCharacter::TurnAtRate(float Rate)
-{
+void ANetworkingTestCharacter::TurnAtRate(float Rate) {
 	// calculate delta for this frame from the rate information
 	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
 }
 
-void ANetworkingTestCharacter::LookUpAtRate(float Rate)
-{
+void ANetworkingTestCharacter::LookUpAtRate(float Rate) {
 	// calculate delta for this frame from the rate information
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
-bool ANetworkingTestCharacter::EnableTouchscreenMovement(class UInputComponent* PlayerInputComponent)
-{
-	if (FPlatformMisc::SupportsTouchInput() || GetDefault<UInputSettings>()->bUseMouseForTouch)
-	{
+bool ANetworkingTestCharacter::EnableTouchscreenMovement(class UInputComponent* PlayerInputComponent) {
+	if (FPlatformMisc::SupportsTouchInput() || GetDefault<UInputSettings>()->bUseMouseForTouch) {
 		PlayerInputComponent->BindTouch(EInputEvent::IE_Pressed, this, &ANetworkingTestCharacter::BeginTouch);
 		PlayerInputComponent->BindTouch(EInputEvent::IE_Released, this, &ANetworkingTestCharacter::EndTouch);
 
 		//Commenting this out to be more consistent with FPS BP template.
 		//PlayerInputComponent->BindTouch(EInputEvent::IE_Repeat, this, &ANetworkingTestCharacter::TouchUpdate);
 		return true;
-	}
-	
-	return false;
+	} return false;
 }

@@ -3,5 +3,4 @@
 #include "NetworkingTest.h"
 #include "Modules/ModuleManager.h"
 
-IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, NetworkingTest, "NetworkingTest" );
- 
+IMPLEMENT_PRIMARY_GAME_MODULE(FDefaultGameModuleImpl, NetworkingTest, "NetworkingTest");

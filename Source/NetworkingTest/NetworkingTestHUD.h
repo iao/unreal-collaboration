@@ -1,14 +1,13 @@
 // Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
 
-#pragma once 
+#pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
 #include "NetworkingTestHUD.generated.h"
 
 UCLASS()
-class ANetworkingTestHUD : public AHUD
-{
+class ANetworkingTestHUD : public AHUD {
 	GENERATED_BODY()
 
 public:
@@ -22,4 +21,3 @@ private:
 	class UTexture2D* CrosshairTex;
 
 };
-

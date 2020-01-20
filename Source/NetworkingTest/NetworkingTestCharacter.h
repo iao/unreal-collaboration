@@ -9,8 +9,7 @@
 class UInputComponent;
 
 UCLASS(config=Game)
-class ANetworkingTestCharacter : public ACharacter
-{
+class ANetworkingTestCharacter : public ACharacter {
 	GENERATED_BODY()
 
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
@@ -81,7 +80,7 @@ public:
 	uint32 bUsingMotionControllers : 1;
 
 protected:
-	
+
 	/** Fires a projectile. */
 	void OnFire();
 
@@ -113,19 +112,23 @@ protected:
 	 */
 	void LookUpAtRate(float Rate);
 
-	struct TouchData
-	{
-		TouchData() { bIsPressed = false;Location=FVector::ZeroVector;}
+	struct TouchData {
+		TouchData() {
+			bIsPressed = false;
+			Location = FVector::ZeroVector;
+		}
+
 		bool bIsPressed;
 		ETouchIndex::Type FingerIndex;
 		FVector Location;
 		bool bMoved;
 	};
+
 	void BeginTouch(const ETouchIndex::Type FingerIndex, const FVector Location);
 	void EndTouch(const ETouchIndex::Type FingerIndex, const FVector Location);
 	void TouchUpdate(const ETouchIndex::Type FingerIndex, const FVector Location);
-	TouchData	TouchItem;
-	
+	TouchData TouchItem;
+
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
@@ -146,4 +149,3 @@ public:
 	FORCEINLINE class UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
 };
-
