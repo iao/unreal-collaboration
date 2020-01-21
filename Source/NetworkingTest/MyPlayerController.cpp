@@ -4,30 +4,28 @@
 #include "ConstructorHelpers.h"
 
 AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
-	// Do things here
 	ConstructorHelpers::FClassFinder<UMyUserWidget> UIClassFinder(TEXT("/Game/FirstPersonCPP/Blueprints/UserWidget"));
 	PlayerUIClass = UIClassFinder.Class;
-}
 
-void AMyPlayerController::SetupInputComponent() {
-	Super::SetupInputComponent();
-	check(InputComponent);
-
-	InputComponent->BindAxis("Move", this, &AMyPlayerController::Move);
+	text = FText::FromString(FString(TEXT("Hello There")));
 }
 
 void AMyPlayerController::BeginPlay() {
 	Super::BeginPlay();
 
 	PlayerUI = CreateWidget<UMyUserWidget>(this, PlayerUIClass);
+	PlayerUI->Controller = this;
+	PlayerUI->SetText(text);
 	PlayerUI->AddToViewport();
 	bShowMouseCursor = true;
 }
 
-void AMyPlayerController::Move(float Value) {
-	if (Value != 0.0f && (GetPawn() != NULL)) {
-		// transform to world space and add it
-		GetPawnOrSpectator()->AddMovementInput(GetPawnOrSpectator()->GetActorForwardVector(), Value);
-		UE_LOG(LogTemp, Warning, TEXT(":)"));
-	}
+void AMyPlayerController::Confirm() {
+	UE_LOG(LogTemp, Warning, TEXT("Pressed!! Got %s!"), *text.ToString());
+	text = PlayerUI->GetText();
+	PlayerUI->SetText(text);
+	UE_LOG(LogTemp, Warning, TEXT("Done!! Got %s!"), *text.ToString());
+
+	ACubePawn* pawn = Cast<ACubePawn>(GetPawnOrSpectator());
+	pawn->SetText(text);
 }

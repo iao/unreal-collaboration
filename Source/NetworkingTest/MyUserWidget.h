@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Components/Button.h"
+#include "EditableTextBox.h"
+#include "Button.h"
+#include "Internationalization/Text.h"
 #include "MyUserWidget.generated.h"
 
 UCLASS()
@@ -13,11 +15,20 @@ class NETWORKINGTEST_API UMyUserWidget : public UUserWidget {
 
 public:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-	UButton* TheButton;
+	UEditableTextBox* TheBox;
 
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UButton* ConfirmButton;
+
+	UPROPERTY(BlueprintReadOnly)
+	class AMyPlayerController* Controller;
+	
+	FText GetText();
+	void SetText(FText Text);
+	
 protected:
 	virtual bool Initialize() override;
 
 	UFUNCTION()
-	void Test();
+	void Confirm();
 };

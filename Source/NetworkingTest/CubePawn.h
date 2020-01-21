@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/DefaultPawn.h"
+#include "Engine/TextRenderActor.h"
+#include "Components/TextRenderComponent.h"
 #include "CubePawn.generated.h"
 
 UCLASS()
@@ -14,6 +16,10 @@ public:
 	// Sets default values for this pawn's properties
 	ACubePawn();
 
+	UPROPERTY(BlueprintReadOnly)
+	ATextRenderActor* TextActor;
+	void SetText(FText text);
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

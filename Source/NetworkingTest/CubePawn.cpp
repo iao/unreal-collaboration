@@ -11,10 +11,16 @@ ACubePawn::ACubePawn() {
 // Called when the game starts or when spawned
 void ACubePawn::BeginPlay() {
 	Super::BeginPlay();
+
+	TextActor = GetWorld()->SpawnActor<ATextRenderActor>(ATextRenderActor::StaticClass(), GetActorLocation(), FRotator(0.f, 0.f, 0.f));
+	TextActor->GetTextRender()->SetTextRenderColor(FColor::Red);
 }
 
 // Called every frame
 void ACubePawn::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
+}
 
+void ACubePawn::SetText(FText text) {
+	TextActor->GetTextRender()->SetText(text);
 }

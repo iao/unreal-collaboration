@@ -7,6 +7,7 @@
 #include "GameFramework/Pawn.h"
 #include "UserWidget.h"
 #include "MyUserWidget.h"
+#include "CubePawn.h"
 #include "MyPlayerController.generated.h"
 
 /**
@@ -19,11 +20,14 @@ class NETWORKINGTEST_API AMyPlayerController : public APlayerController {
 public:
 	AMyPlayerController(const FObjectInitializer& ObjectInitializer);
 
+	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	void Confirm();
+	
+protected:
 	TSubclassOf<class UMyUserWidget> PlayerUIClass;
 	class UMyUserWidget* PlayerUI;
 	
-	void Move(float Value);
-
-	virtual void BeginPlay() override;
-	virtual void SetupInputComponent() override;
+	FText text;
 };
