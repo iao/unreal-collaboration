@@ -9,12 +9,12 @@
 ANetworkingTestGameMode::ANetworkingTestGameMode() : Super() {
 	// set our player controller to our own one
 	PlayerControllerClass = AMyPlayerController::StaticClass();
+
+	// use our custom HUD class
+	HUDClass = ANetworkingTestHUD::StaticClass();
 	
 	// set default pawn class to our Blueprinted character
 	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(
 		TEXT("/Game/FirstPersonCPP/Blueprints/MyCubePawn"));
 	DefaultPawnClass = PlayerPawnClassFinder.Class;
-	
-	// use our custom HUD class
-	HUDClass = ANetworkingTestHUD::StaticClass();
 }

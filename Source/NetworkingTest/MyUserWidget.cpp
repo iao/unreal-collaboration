@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "MyUserWidget.h"
-#include "MyPlayerController.h"
+#include "NetworkingTestHUD.h"
 
 bool UMyUserWidget::Initialize() {
     bool isInit = Super::Initialize();
@@ -19,5 +19,5 @@ void UMyUserWidget::SetText(FText Text) {
 }
 
 void UMyUserWidget::Confirm() {
-    Controller->Confirm();
+    Owner->Confirm();
 }

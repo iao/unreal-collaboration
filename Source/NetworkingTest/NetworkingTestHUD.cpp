@@ -8,27 +8,29 @@
 #include "UObject/ConstructorHelpers.h"
 
 ANetworkingTestHUD::ANetworkingTestHUD() {
-	// Set the crosshair texture
-	static ConstructorHelpers::FObjectFinder<UTexture2D> CrosshairTexObj(
-		TEXT("/Game/FirstPerson/Textures/FirstPersonCrosshair"));
-	CrosshairTex = CrosshairTexObj.Object;
+	ConstructorHelpers::FClassFinder<UMyUserWidget> UIClassFinder(TEXT("/Game/FirstPersonCPP/Blueprints/UserWidget"));
+	PlayerUIClass = UIClassFinder.Class;
+
+	text = FText::FromString(FString(TEXT("Hello There")));
 }
 
+void ANetworkingTestHUD::BeginPlay() {
+	Super::BeginPlay();
 
-void ANetworkingTestHUD::DrawHUD() {
-	Super::DrawHUD();
+	PlayerUI = CreateWidget<UMyUserWidget>(GetOwningPlayerController(), PlayerUIClass);
+	if (PlayerUI) {
+		PlayerUI->Owner = this;
+		PlayerUI->SetText(text);
+		PlayerUI->AddToViewport();
+	}
+}
 
-	// Draw very simple crosshair
+void ANetworkingTestHUD::Confirm() {
+	UE_LOG(LogTemp, Warning, TEXT("Pressed!! Got %s!"), *text.ToString());
+	text = PlayerUI->GetText();
+	PlayerUI->SetText(text);
+	UE_LOG(LogTemp, Warning, TEXT("Done!! Got %s!"), *text.ToString());
 
-	// find center of the Canvas
-	const FVector2D Center(Canvas->ClipX * 0.5f, Canvas->ClipY * 0.5f);
-
-	// offset by half the texture's dimensions so that the center of the texture aligns with the center of the Canvas
-	const FVector2D CrosshairDrawPosition((Center.X),
-	                                      (Center.Y + 20.0f));
-
-	// draw the crosshair
-	FCanvasTileItem TileItem(CrosshairDrawPosition, CrosshairTex->Resource, FLinearColor::White);
-	TileItem.BlendMode = SE_BLEND_Translucent;
-	Canvas->DrawItem(TileItem);
+	ACubePawn* pawn = Cast<ACubePawn>(GetOwningPawn());
+	pawn->SetText(text);
 }

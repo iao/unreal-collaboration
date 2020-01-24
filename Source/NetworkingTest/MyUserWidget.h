@@ -21,7 +21,7 @@ public:
 	UButton* ConfirmButton;
 
 	UPROPERTY(BlueprintReadOnly)
-	class AMyPlayerController* Controller;
+	class ANetworkingTestHUD* Owner;
 	
 	FText GetText();
 	void SetText(FText Text);
