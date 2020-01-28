@@ -18,7 +18,14 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)
 	ATextRenderActor* TextActor;
+
+	UPROPERTY(BlueprintReadOnly, Replicated)
+	FText text;
+	
 	void SetText(FText text);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSetText();
 	
 protected:
 	// Called when the game starts or when spawned

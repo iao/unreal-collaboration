@@ -1,5 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #include "CubePawn.h"
+#include "UnrealNetwork.h"
 
 // Sets default values
 ACubePawn::ACubePawn() {
@@ -12,8 +13,11 @@ ACubePawn::ACubePawn() {
 void ACubePawn::BeginPlay() {
 	Super::BeginPlay();
 
-	TextActor = GetWorld()->SpawnActor<ATextRenderActor>(ATextRenderActor::StaticClass(), GetActorLocation(), FRotator(0.f, 0.f, 0.f));
-	TextActor->GetTextRender()->SetTextRenderColor(FColor::Red);
+	if (!IsLocallyControlled()) {
+		TextActor = GetWorld()->SpawnActor<ATextRenderActor>(ATextRenderActor::StaticClass(), GetActorLocation(), FRotator(0.f, 0.f, 0.f));
+		TextActor->SetReplicates(true);
+		TextActor->GetTextRender()->SetTextRenderColor(FColor::Red);
+	}
 }
 
 // Called every frame
@@ -21,6 +25,22 @@ void ACubePawn::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
 }
 
+// Called to set the text
 void ACubePawn::SetText(FText text) {
+	this->text = text;
+	ServerSetText();
+}
+
+void ACubePawn::ServerSetText_Implementation() {
 	TextActor->GetTextRender()->SetText(text);
+}
+
+bool ACubePawn::ServerSetText_Validate() {
+	return true;
+}
+
+void ACubePawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
+	DOREPLIFETIME(ACubePawn, text);
 }

@@ -5,4 +5,5 @@
 
 AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
 	// stuff
+	bShowMouseCursor = true;
 }
