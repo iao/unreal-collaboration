@@ -6,6 +6,7 @@
 #include "GameFramework/DefaultPawn.h"
 #include "Engine/TextRenderActor.h"
 #include "Components/TextRenderComponent.h"
+#include "MyTextRenderActor.h"
 #include "CubePawn.generated.h"
 
 UCLASS()
@@ -17,15 +18,12 @@ public:
 	ACubePawn();
 
 	UPROPERTY(BlueprintReadOnly)
-	ATextRenderActor* TextActor;
-
-	UPROPERTY(BlueprintReadOnly, Replicated)
-	FText text;
+	AMyTextRenderActor* TextActor;
 	
 	void SetText(FText text);
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerSetText();
+	void ServerSetText(const FText& text);
 	
 protected:
 	// Called when the game starts or when spawned

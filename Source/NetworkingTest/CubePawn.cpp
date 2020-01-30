@@ -5,42 +5,40 @@
 // Sets default values
 ACubePawn::ACubePawn() {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	
 	PrimaryActorTick.bCanEverTick = true;
 	bAddDefaultMovementBindings = false;
+
+	SetReplicates(true);
 }
 
 // Called when the game starts or when spawned
 void ACubePawn::BeginPlay() {
 	Super::BeginPlay();
 
-	if (!IsLocallyControlled()) {
-		TextActor = GetWorld()->SpawnActor<ATextRenderActor>(ATextRenderActor::StaticClass(), GetActorLocation(), FRotator(0.f, 0.f, 0.f));
-		TextActor->SetReplicates(true);
-		TextActor->GetTextRender()->SetTextRenderColor(FColor::Red);
+	// If we are the server, then spawn the text actor
+	if (GetLocalRole() == ROLE_Authority) {
+		TextActor = GetWorld()->SpawnActor<AMyTextRenderActor>(AMyTextRenderActor::StaticClass(), GetActorLocation(), FRotator(0.f, 0.f, 0.f));
+		TextActor->text = FText::FromString("hello");
 	}
 }
 
 // Called every frame
 void ACubePawn::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
+	if(TextActor) UE_LOG(LogTemp, Warning, TEXT("Text is '%s'"), *TextActor->text.ToString());
+	//if (GetLocalRole() != ROLE_Authority) UE_LOG(LogTemp, Warning, TEXT("%hhd"), TextActor == nullptr);
 }
 
 // Called to set the text
 void ACubePawn::SetText(FText text) {
-	this->text = text;
-	ServerSetText();
+	ServerSetText(text);
 }
 
-void ACubePawn::ServerSetText_Implementation() {
-	TextActor->GetTextRender()->SetText(text);
+void ACubePawn::ServerSetText_Implementation(const FText& text) {
+	TextActor->text = text;
 }
 
-bool ACubePawn::ServerSetText_Validate() {
+bool ACubePawn::ServerSetText_Validate(const FText& text) {
 	return true;
-}
-
-void ACubePawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	
-	DOREPLIFETIME(ACubePawn, text);
 }
