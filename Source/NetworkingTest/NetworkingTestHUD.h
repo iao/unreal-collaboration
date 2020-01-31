@@ -21,7 +21,7 @@ public:
 
 	UFUNCTION()
 	void Confirm();
-
+	void SetVisible(bool visible);
 protected:
 	TSubclassOf<class UMyUserWidget> PlayerUIClass;
 	class UMyUserWidget* PlayerUI;

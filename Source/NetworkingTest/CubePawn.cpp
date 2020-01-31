@@ -4,11 +4,7 @@
 
 // Sets default values
 ACubePawn::ACubePawn() {
- 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	
-	PrimaryActorTick.bCanEverTick = true;
 	bAddDefaultMovementBindings = false;
-
 	SetReplicates(true);
 }
 
@@ -18,27 +14,22 @@ void ACubePawn::BeginPlay() {
 
 	// If we are the server, then spawn the text actor
 	if (GetLocalRole() == ROLE_Authority) {
-		TextActor = GetWorld()->SpawnActor<AMyTextRenderActor>(AMyTextRenderActor::StaticClass(), GetActorLocation(), FRotator(0.f, 0.f, 0.f));
-		TextActor->text = FText::FromString("hello");
+		TextActor = GetWorld()->SpawnActor<AMyTextRenderActor>(AMyTextRenderActor::StaticClass(), GetActorLocation(), GetActorRotation());
+		TextActor->text = FText::FromString("Please enter text");
 	}
 }
 
-// Called every frame
-void ACubePawn::Tick(float DeltaTime) {
-	Super::Tick(DeltaTime);
-	//if(TextActor) UE_LOG(LogTemp, Warning, TEXT("Text is '%s'"), *TextActor->text.ToString());
-	//if (GetLocalRole() != ROLE_Authority) UE_LOG(LogTemp, Warning, TEXT("%hhd"), TextActor == nullptr);
-}
-
-// Called to set the text
+// Called to set the text from clients
 void ACubePawn::SetText(FText text) {
 	ServerSetText(text);
 }
 
+// Set the text on the server
 void ACubePawn::ServerSetText_Implementation(const FText& text) {
 	TextActor->text = text;
 }
 
+// Validate
 bool ACubePawn::ServerSetText_Validate(const FText& text) {
 	return true;
 }
