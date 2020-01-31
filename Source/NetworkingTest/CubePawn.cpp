@@ -26,7 +26,7 @@ void ACubePawn::BeginPlay() {
 // Called every frame
 void ACubePawn::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
-	if(TextActor) UE_LOG(LogTemp, Warning, TEXT("Text is '%s'"), *TextActor->text.ToString());
+	//if(TextActor) UE_LOG(LogTemp, Warning, TEXT("Text is '%s'"), *TextActor->text.ToString());
 	//if (GetLocalRole() != ROLE_Authority) UE_LOG(LogTemp, Warning, TEXT("%hhd"), TextActor == nullptr);
 }
 

@@ -24,10 +24,8 @@ void ANetworkingTestHUD::BeginPlay() {
 }
 
 void ANetworkingTestHUD::Confirm() {
-	UE_LOG(LogTemp, Warning, TEXT("Pressed!! Got %s!"), *text.ToString());
 	text = PlayerUI->GetText();
 	PlayerUI->SetText(text);
-	UE_LOG(LogTemp, Warning, TEXT("Done!! Got %s!"), *text.ToString());
 
 	ACubePawn* pawn = Cast<ACubePawn>(GetOwningPawn());
 	pawn->SetText(text);
