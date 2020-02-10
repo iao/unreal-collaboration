@@ -12,3 +12,7 @@ For deployment, we are expecting clients to download their executable from [Unre
 The server is therefore a dedicated server which will run in a Linux environment, and the clients will be built for several platforms. 
 
 To build the project, if you are planning on cross-compiling to Linux [install Unreal from source](https://docs.unrealengine.com/en-US/GettingStarted/DownloadingUnrealEngine/index.html), and generate the project files. Then build both a packaged version of the client from within the editor target, and build the server directly with the server target.
+
+### Notes
+Ability to hide the signs
+Customising characters

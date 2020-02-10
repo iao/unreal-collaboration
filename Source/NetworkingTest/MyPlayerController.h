@@ -8,6 +8,7 @@
 #include "Engine/World.h"
 #include "CubePawn.h"
 #include "NetworkingTestCharacter.h"
+#include "NetworkingTestHUD.h"
 #include "MyPlayerController.generated.h"
 
 UCLASS()
@@ -16,6 +17,8 @@ class NETWORKINGTEST_API AMyPlayerController : public APlayerController {
 
 protected:
 	APawn* ThePawn;
+
+	UPROPERTY(Transient, ReplicatedUsing = OnRep_Pawn)
 	bool isPawn;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
@@ -25,6 +28,7 @@ public:
 	AMyPlayerController(const FObjectInitializer& ObjectInitializer);
 	virtual void SetupInputComponent() override;
 	void Spawn();
+	void OnRep_Pawn();
 	
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSpawn();
