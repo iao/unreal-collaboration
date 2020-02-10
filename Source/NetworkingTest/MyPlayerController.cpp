@@ -44,35 +44,40 @@ void AMyPlayerController::ServerSpawn_Implementation() {
 		// Get a reference to the current actor (owner)
 		ANetworkingTestCharacter* Actor = Cast<ANetworkingTestCharacter>(GetPawnOrSpectator());
 
-		// Try to find a pawn within a distance, ensure it doesnt have an instigator
+		// Find the pawn without an instigator closest to Actor
+		ACubePawn* FoundPawn = NULL;
+		float min = FindDistance + 1.0f;
 		for(TActorIterator<ACubePawn> CubeItr(GetWorld()); CubeItr; ++CubeItr) {
-			ACubePawn* FoundPawn = Cast<ACubePawn>(*CubeItr);
-			if(FoundPawn) {
-				float distance = FVector::Dist(FoundPawn->GetActorLocation(), Actor->GetActorLocation());
-				if(distance <= 500.0f && !FoundPawn->GetInstigator()) {
-					// When we have found a pawn which we can use, set it's instigator and possess it
-					ThePawn = FoundPawn;
-					ThePawn->SetInstigator(Actor);
-
-					// Possess, update state and return
-					Possess(ThePawn);
-					isPawn = true;
-					return;
+			ACubePawn* ItrPawn = Cast<ACubePawn>(*CubeItr);
+			if(ItrPawn) {
+				float distance = FVector::Dist(ItrPawn->GetActorLocation(), Actor->GetActorLocation());
+				if(distance <= FindDistance && !ItrPawn->GetInstigator() && distance < min) {
+					min = distance;
+					FoundPawn = ItrPawn;
 				}
 			}
 		}
+
+		// If we find a pawn, then set its instigator and possess it
+		if (min < FindDistance + 1.0f) {
+			ThePawn = FoundPawn;
+			ThePawn->SetInstigator(Actor);
+
+			// Possess, update state and return
+			Possess(ThePawn);
+			isPawn = true;
+			return;
+		}
 		
 		// Otherwise Make the pawn from blueprinted pawn
-		// Set the location etc of the new act
+		// Set the location etc of the new pawn
 		const FVector Location = Actor->GetActorLocation() + FVector(0.f, 500.f, 0).RotateAngleAxis(Actor->GetActorRotation().Roll, FVector(0, 0, 1));
 		FActorSpawnParameters Params = FActorSpawnParameters();
 		Params.Instigator = Actor;
 
-		// Spawn the pawn to the world
+		// Spawn the pawn to the world & update status
 		ThePawn = GetWorld()->SpawnActor<APawn>(SpawnableClass->GetAuthoritativeClass(), Location, FRotator(0.f, 0.f, 360.f - Actor->GetActorRotation().Roll), Params);
 		Possess(ThePawn);
-
-		// Update state
 		isPawn = true;
 	}
 }

@@ -23,7 +23,9 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TSubclassOf<APawn> SpawnableClass;
-	
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	float FindDistance;
 public:
 	AMyPlayerController(const FObjectInitializer& ObjectInitializer);
 	virtual void SetupInputComponent() override;
