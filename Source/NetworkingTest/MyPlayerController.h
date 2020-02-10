@@ -17,6 +17,9 @@ class NETWORKINGTEST_API AMyPlayerController : public APlayerController {
 protected:
 	APawn* ThePawn;
 	bool isPawn;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TSubclassOf<APawn> SpawnableClass;
 	
 public:
 	AMyPlayerController(const FObjectInitializer& ObjectInitializer);

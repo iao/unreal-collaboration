@@ -8,7 +8,9 @@
 
 ANetworkingTestGameMode::ANetworkingTestGameMode() : Super() {
 	// set our player controller to our own one
-	PlayerControllerClass = AMyPlayerController::StaticClass();
+	static ConstructorHelpers::FClassFinder<APlayerController> PlayerControllerClassFinder(
+		TEXT("/Game/FirstPersonCPP/Blueprints/MyPlayerController"));
+	PlayerControllerClass = PlayerControllerClassFinder.Class;
 
 	// use our custom HUD class
 	HUDClass = ANetworkingTestHUD::StaticClass();

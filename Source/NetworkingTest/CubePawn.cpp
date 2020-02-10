@@ -8,7 +8,6 @@ ACubePawn::ACubePawn() {
 	
 	PrimaryActorTick.bCanEverTick = true;
 	bAddDefaultMovementBindings = false;
-
 	SetReplicates(true);
 }
 
@@ -18,7 +17,8 @@ void ACubePawn::BeginPlay() {
 
 	// If we are the server, then spawn the text actor
 	if (GetLocalRole() == ROLE_Authority) {
-		TextActor = GetWorld()->SpawnActor<AMyTextRenderActor>(AMyTextRenderActor::StaticClass(), GetActorLocation(), FRotator(0.f, 0.f, 0.f));
+		TextActor = GetWorld()->SpawnActor<AMyTextRenderActor>(AMyTextRenderActor::StaticClass(), 
+					GetActorLocation() + FVector(14.f, 75.f, 20.f).RotateAngleAxis(GetActorRotation().Roll, FVector(0, 0, 1)), GetActorRotation());
 		TextActor->text = FText::FromString("hello");
 	}
 }
