@@ -17,8 +17,14 @@ public:
 	// Sets default values for this pawn's properties
 	ACubePawn();
 
-	UPROPERTY(BlueprintReadOnly)
+	UFUNCTION(BlueprintCallable, Category = "Disable")
+	void HideActor(bool toHide);
+	
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing=OnRep_TextActor)
 	AMyTextRenderActor* TextActor;
+
+	UFUNCTION()
+	void OnRep_TextActor();
 	
 	void SetText(FText text);
 

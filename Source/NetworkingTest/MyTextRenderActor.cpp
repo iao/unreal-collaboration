@@ -16,6 +16,11 @@ void AMyTextRenderActor::OnRep_Text() {
 	GetTextRender()->SetText(text);
 }
 
+// Called to disable the actor from the client
+void AMyTextRenderActor::HideActor(bool toHide) {
+	SetActorHiddenInGame(toHide);
+}
+
 // Sets text to replicate
 void AMyTextRenderActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

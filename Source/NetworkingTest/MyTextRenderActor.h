@@ -15,6 +15,9 @@ class NETWORKINGTEST_API AMyTextRenderActor : public ATextRenderActor {
 	GENERATED_BODY()
 
 public:
+	UFUNCTION(BlueprintCallable, Category = "Disable")
+	void HideActor(bool toHide);
+	
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_Text)
 	FText text;
 	

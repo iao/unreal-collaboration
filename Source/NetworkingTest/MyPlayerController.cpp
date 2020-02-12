@@ -8,6 +8,7 @@
 // Constructor
 AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
 	isPawn = false;
+	isHidden = false;
 }
 
 // Setup inputs for the controller
@@ -21,12 +22,29 @@ void AMyPlayerController::SetupInputComponent() {
 	if (InputComponent) {
 		// Spawn a sign
 		InputComponent->BindAction("Spawn", IE_Pressed, this, &AMyPlayerController::Spawn);
+		InputComponent->BindAction("Hide", IE_Pressed, this, &AMyPlayerController::Hide);
 	}
 }
 
 // Client side spawn function
 void AMyPlayerController::Spawn() {
-	ServerSpawn();
+	if(!isHidden) ServerSpawn();
+}
+
+// Hide all signs for the client
+void AMyPlayerController::Hide() {
+	if (!isPawn) {
+		// Toggle isHidden
+		isHidden = !isHidden;
+
+		// Set all actors to hide or not
+		for (TActorIterator<ACubePawn> CubeItr(GetWorld()); CubeItr; ++CubeItr) {
+			ACubePawn* ItrPawn = Cast<ACubePawn>(*CubeItr);
+			if (ItrPawn) {
+				ItrPawn->HideActor(isHidden);
+			}
+		}
+	}
 }
 
 // Server side spawn function

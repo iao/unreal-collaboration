@@ -27,9 +27,13 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	float FindDistance;
 public:
+	UPROPERTY(EditAnywhere)
+	bool isHidden;
+	
 	AMyPlayerController(const FObjectInitializer& ObjectInitializer);
 	virtual void SetupInputComponent() override;
 	void Spawn();
+	void Hide();
 	void OnRep_Pawn();
 	
 	UFUNCTION(Server, Reliable, WithValidation)
