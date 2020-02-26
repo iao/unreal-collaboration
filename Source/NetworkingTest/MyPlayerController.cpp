@@ -24,12 +24,14 @@ void AMyPlayerController::KeepAliveResponce(FHttpRequestPtr Request, FHttpRespon
 
 // Allow blueprints to ask for player info
 void AMyPlayerController::RequestInfo() {
-	FInfoStruct_Request info_r;
-	info_r.session = AHTTPService::GetInfoJSON().session;
-	FString URL = AHTTPService::GetInfoJSON().url + "/api/account/info";
+	if (GetLocalRole() != ROLE_Authority) {
+		FInfoStruct_Request info_r;
+		info_r.session = AHTTPService::GetInfoJSON().session;
+		FString URL = AHTTPService::GetInfoJSON().url + "/api/account/info";
 
-	if (info_r.session != "" && URL != "") {
-		AHTTPService::Info(URL, info_r, this);
+		if (info_r.session != "" && URL != "") {
+			AHTTPService::Info(URL, info_r, this);
+		}
 	}
 }
 
