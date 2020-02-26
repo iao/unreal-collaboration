@@ -3,12 +3,49 @@
 #include "MyPlayerController.h"
 #include "ConstructorHelpers.h"
 #include "Engine.h"
+#include "HTTPService.h"
 #include "UnrealNetwork.h"
+#include "Math/UnrealMathUtility.h"
 
 // Constructor
 AMyPlayerController::AMyPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
 	isPawn = false;
 	isHidden = false;
+	counter_max = (60 * 60 * 1); // TODO: Allow for this to be set via config JSON
+	random_num = FMath::RandRange(1, 100);
+}
+
+// Simple warning if we failed to keep alive
+void AMyPlayerController::KeepAliveResponce(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
+	if (!AHTTPService::ResponseIsValid(Response, bWasSuccessful)) {
+		UE_LOG(LogTemp, Warning, TEXT("Failed to keep server alive! May be kicked soon!"));
+	}
+}
+
+// Allow blueprints to ask for player info
+void AMyPlayerController::RequestInfo() {
+	FInfoStruct_Request info_r;
+	info_r.session = AHTTPService::GetInfoJSON().session;
+	FString URL = AHTTPService::GetInfoJSON().url + "/api/account/info";
+
+	if (info_r.session != "" && URL != "") {
+		AHTTPService::Info(URL, info_r, this);
+	}
+}
+
+// Update the info variable from the request
+void AMyPlayerController::InfoResponce(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
+	if (!AHTTPService::ResponseIsValid(Response, bWasSuccessful)) {
+		UE_LOG(LogTemp, Warning, TEXT("Failed to get info! Assuming info is 1."));
+		info = 1;
+		UponInfoChanged();
+		return;
+	}
+
+	FInfoStruct_Responce responce;
+	FJsonObjectConverter::JsonObjectStringToUStruct<FInfoStruct_Responce>(Response->GetContentAsString(), &responce, 0, 0);
+	info = responce.info;
+	UponInfoChanged();
 }
 
 // Setup inputs for the controller
@@ -23,6 +60,26 @@ void AMyPlayerController::SetupInputComponent() {
 		// Spawn a sign
 		InputComponent->BindAction("Spawn", IE_Pressed, this, &AMyPlayerController::Spawn);
 		InputComponent->BindAction("Hide", IE_Pressed, this, &AMyPlayerController::Hide);
+	}
+}
+
+// Send keep-alive to the selector server
+void AMyPlayerController::Tick(float DeltaTime) {
+	Super::Tick(DeltaTime);
+
+	if (GetLocalRole() != ROLE_Authority) {
+		counter++;
+		if (counter > 3 * counter_max) counter = 0;
+		if ((counter - random_num) % counter_max == 0) {
+			FKeepAliveStruct keepalive;
+			keepalive.session = AHTTPService::GetInfoJSON().session;
+			keepalive.title = AHTTPService::GetInfoJSON().title;
+			FString URL = AHTTPService::GetInfoJSON().url + "/api/project/keepalive";
+
+			if (keepalive.session != "" && keepalive.title != "" && URL != "") {
+				AHTTPService::KeepAlive(URL, keepalive, this);
+			}
+		}
 	}
 }
 
