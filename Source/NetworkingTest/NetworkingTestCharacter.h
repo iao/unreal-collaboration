@@ -79,6 +79,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	uint32 bUsingMotionControllers : 1;
 
+	/** Allow the player to always jump */
+	virtual bool CanJumpInternal_Implementation() const override;
+	
 protected:
 
 	/** Fires a projectile. */
@@ -87,9 +90,9 @@ protected:
 	/** Server fires a projectile */
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerFire();
-
+	
 	/** Update the pitch */
-	void Tick(float DeltaTime);
+	virtual void Tick(float DeltaTime) override;
 
 	/** Resets HMD orientation and position in VR. */
 	void OnResetVR();

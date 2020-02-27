@@ -81,11 +81,14 @@ ANetworkingTestCharacter::ANetworkingTestCharacter() {
 
 	// Uncomment the following line to turn motion controllers on by default:
 	//bUsingMotionControllers = true;
+
+	// Allow ticks
+	PrimaryActorTick.bCanEverTick = true;
 	
-	// Setup movement
-	GetCharacterMovement()->GravityScale = 0;
+	// TODO: Setup movement
+	JumpMaxHoldTime = 100000.0f;
+	GetCharacterMovement()->GravityScale = 0.35f;
 	GetCharacterMovement()->AirControl = 1;
-	GetCharacterMovement()->bCheatFlying = true;
 }
 
 void ANetworkingTestCharacter::BeginPlay() {
@@ -104,6 +107,25 @@ void ANetworkingTestCharacter::BeginPlay() {
 		VR_Gun->SetHiddenInGame(true, true);
 		Mesh1P->SetHiddenInGame(false, true);
 	}
+}
+
+void ANetworkingTestCharacter::Tick(float DeltaTime) {
+	Super::Tick(DeltaTime);
+
+	if (!IsLocallyControlled()) {
+		FRotator NewRot = FirstPersonCameraComponent->GetRelativeRotation();
+		NewRot.Pitch = RemoteViewPitch * 360.0f / 255.0f;
+
+		FirstPersonCameraComponent->SetRelativeRotation(NewRot);
+	}
+
+	if (!bWasJumping && GetMovementComponent()->Velocity.Z > 1.5f) {
+		GetMovementComponent()->Velocity.Z -= GetMovementComponent()->GetMaxSpeed();
+	}
+}
+
+bool ANetworkingTestCharacter::CanJumpInternal_Implementation() const {
+	return true;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -184,17 +206,6 @@ void ANetworkingTestCharacter::ServerFire_Implementation() {
 
 bool ANetworkingTestCharacter::ServerFire_Validate() {
 	return true;
-}
-
-void ANetworkingTestCharacter::Tick(float DeltaTime) {
-	Super::Tick(DeltaTime);
-
-	if (!IsLocallyControlled()) {
-		FRotator NewRot = FirstPersonCameraComponent->GetRelativeRotation();
-		NewRot.Pitch = RemoteViewPitch * 360.0f / 255.0f;
-
-		FirstPersonCameraComponent->SetRelativeRotation(NewRot);
-	}
 }
 
 void ANetworkingTestCharacter::OnResetVR() {
