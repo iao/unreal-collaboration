@@ -13,6 +13,7 @@
 #include "Misc/Paths.h"
 #include "HTTPService.generated.h"
 
+// https://wiki.unrealengine.com/Http-requests
 UCLASS(Blueprintable, hideCategories = (Rendering, Replication, Input, Actor, "Actor Tick"))
 class NETWORKINGTEST_API AHTTPService : public AActor {
 	GENERATED_BODY()

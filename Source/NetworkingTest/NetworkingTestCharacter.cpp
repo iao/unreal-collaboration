@@ -11,6 +11,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "MotionControllerComponent.h"
 #include "XRMotionControllerBase.h" // for FXRMotionControllerBase::RightHandSourceId
+#include "GameFramework/CharacterMovementComponent.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -22,7 +23,7 @@ ANetworkingTestCharacter::ANetworkingTestCharacter() {
 	GetCapsuleComponent()->InitCapsuleSize(55.0f, 96.0f);
 	if (IsRunningClientOnly()) GetCapsuleComponent()->SetHiddenInGame(false, true);
 	else GetCapsuleComponent()->SetHiddenInGame(true, true);
-
+	
 	// set our turn rates for input
 	BaseTurnRate = 45.f;
 	BaseLookUpRate = 45.f;
@@ -80,6 +81,11 @@ ANetworkingTestCharacter::ANetworkingTestCharacter() {
 
 	// Uncomment the following line to turn motion controllers on by default:
 	//bUsingMotionControllers = true;
+	
+	// Setup movement
+	GetCharacterMovement()->GravityScale = 0;
+	GetCharacterMovement()->AirControl = 1;
+	GetCharacterMovement()->bCheatFlying = true;
 }
 
 void ANetworkingTestCharacter::BeginPlay() {
@@ -120,6 +126,7 @@ void ANetworkingTestCharacter::SetupPlayerInputComponent(class UInputComponent* 
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ANetworkingTestCharacter::OnResetVR);
 
 	// Bind movement events
+	PlayerInputComponent->BindAxis("MoveUp", this, &ANetworkingTestCharacter::MoveUp);
 	PlayerInputComponent->BindAxis("MoveForward", this, &ANetworkingTestCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ANetworkingTestCharacter::MoveRight);
 
@@ -246,6 +253,13 @@ void ANetworkingTestCharacter::EndTouch(const ETouchIndex::Type FingerIndex, con
 //		}
 //	}
 //}
+
+void ANetworkingTestCharacter::MoveUp(float Value) {
+	if (Value != 0.0f) {
+		// add movement in that direction
+		AddMovementInput(GetActorUpVector(), Value);
+	}
+}
 
 void ANetworkingTestCharacter::MoveForward(float Value) {
 	if (Value != 0.0f) {

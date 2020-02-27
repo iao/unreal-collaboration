@@ -43,7 +43,7 @@ void AHTTPService::GetStructFromJsonString(FString content, StructType& StructOu
 }
 
 FString AHTTPService::LoadInfoJSON() {
-	FString path = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir() + "/info.json");
+	FString path = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir() + "/info.json");
 	FString data = "";
 
 	if (!FPlatformFileManager::Get().GetPlatformFile().FileExists(*path)) {

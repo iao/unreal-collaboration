@@ -94,11 +94,14 @@ protected:
 	/** Resets HMD orientation and position in VR. */
 	void OnResetVR();
 
+	/* Handles moving vertically */
+	void MoveUp(float Value);
+	
 	/** Handles moving forward/backward */
-	void MoveForward(float Val);
+	void MoveForward(float Value);
 
 	/** Handles stafing movement, left and right */
-	void MoveRight(float Val);
+	void MoveRight(float Value);
 
 	/**
 	 * Called via input to turn at a given rate.
