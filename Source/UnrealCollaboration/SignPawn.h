@@ -1,0 +1,38 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/DefaultPawn.h"
+#include "Engine/TextRenderActor.h"
+#include "Components/TextRenderComponent.h"
+#include "NetworkTextRenderActor.h"
+#include "SignPawn.generated.h"
+
+UCLASS()
+class UNREALCOLLABORATION_API ASignPawn : public ADefaultPawn {
+	GENERATED_BODY()
+
+public:
+	// Sets default values for this pawn's properties
+	ASignPawn();
+
+	UFUNCTION(BlueprintCallable, Category = "Disable")
+	void HideActor(bool toHide);
+	
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing=OnRep_TextActor)
+	ANetworkTextRenderActor* TextActor;
+
+	UFUNCTION()
+	void OnRep_TextActor();
+	
+	void SetText(FText text);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerSetText(const FText& text);
+	
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+};
