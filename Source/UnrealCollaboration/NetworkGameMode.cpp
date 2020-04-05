@@ -6,6 +6,7 @@
 #include "UObject/ConstructorHelpers.h"
 
 ANetworkGameMode::ANetworkGameMode() : Super() {
+	// TODO: Allow these to be changed
 	// set our player controller to our own one
 	static ConstructorHelpers::FClassFinder<APlayerController> PlayerControllerClassFinder(TEXT("/Game/Blueprints/PlayerController"));
 	PlayerControllerClass = PlayerControllerClassFinder.Class;

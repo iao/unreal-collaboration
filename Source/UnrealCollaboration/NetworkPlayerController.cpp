@@ -47,6 +47,7 @@ void ANetworkPlayerController::InfoResponce(FHttpRequestPtr Request, FHttpRespon
 	FInfoStruct_Responce responce;
 	FJsonObjectConverter::JsonObjectStringToUStruct<FInfoStruct_Responce>(Response->GetContentAsString(), &responce, 0, 0);
 	info = responce.info;
+	rank = responce.rank;
 	UponInfoChanged();
 }
 

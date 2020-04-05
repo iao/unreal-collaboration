@@ -6,6 +6,7 @@
 #include "UObject/ConstructorHelpers.h"
 
 ANetworkHUD::ANetworkHUD() {
+	// TODO: Allow this to be changed
 	ConstructorHelpers::FClassFinder<USignWidget> UIClassFinder(TEXT("/Game/Blueprints/SignWidget"));
 	PlayerUIClass = UIClassFinder.Class;
 	

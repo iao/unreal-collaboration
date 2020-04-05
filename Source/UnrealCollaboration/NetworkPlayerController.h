@@ -24,6 +24,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = PlayerInfo)
 	int info;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = PlayerInfo)
+	FString rank;
+
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_Pawn)
 	bool isPawn;
 

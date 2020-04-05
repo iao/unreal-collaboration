@@ -38,6 +38,7 @@ USTRUCT()
 struct FInfoStruct_Responce {
 	GENERATED_BODY()
 		UPROPERTY() int info;
+		UPROPERTY() FString rank;
 
 	FInfoStruct_Responce() {}
 };
