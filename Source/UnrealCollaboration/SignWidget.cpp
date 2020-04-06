@@ -7,6 +7,7 @@ bool USignWidget::Initialize() {
     bool isInit = Super::Initialize();
     if (isInit) {
     	if(ConfirmButton) ConfirmButton->OnClicked.AddDynamic(this, &USignWidget::Confirm);
+        if (DeleteButton) DeleteButton->OnClicked.AddDynamic(this, &USignWidget::Delete);
 	} return isInit;
 }
 
@@ -20,4 +21,8 @@ void USignWidget::SetText(FText Text) {
 
 void USignWidget::Confirm() {
     Owner->Confirm();
+}
+
+void USignWidget::Delete() {
+    Owner->Delete();
 }

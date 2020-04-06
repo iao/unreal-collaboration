@@ -20,6 +20,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UButton* ConfirmButton;
 
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	UButton* DeleteButton;
+
 	UPROPERTY(BlueprintReadOnly)
 	class ANetworkHUD* Owner;
 	
@@ -31,4 +34,7 @@ protected:
 
 	UFUNCTION()
 	void Confirm();
+
+	UFUNCTION()
+	void Delete();
 };

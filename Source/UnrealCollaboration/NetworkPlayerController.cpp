@@ -107,6 +107,11 @@ void ANetworkPlayerController::Hide() {
 	}
 }
 
+// Delete the pawn
+void ANetworkPlayerController::Delete() {
+	if (isPawn) ServerDelete();
+}
+
 // Server side spawn function
 void ANetworkPlayerController::ServerSpawn_Implementation() {
 	if (isPawn) {
@@ -160,8 +165,30 @@ void ANetworkPlayerController::ServerSpawn_Implementation() {
 	}
 }
 
+// Server side delete function
+void ANetworkPlayerController::ServerDelete_Implementation() {
+	// Check if we can
+	if (HasSelectorAuthority()) {
+		// Find the instigator and possess
+		ANetworkCharacter* Actor = Cast<ANetworkCharacter>(ThePawn->GetInstigator());
+		ThePawn->SetInstigator(NULL);
+
+		// Possess and update state
+		Possess(Actor);
+		isPawn = false;
+
+		// Delete the pawn & text actors
+		GetWorld()->DestroyActor(Cast<ASignPawn>(ThePawn)->TextActor);
+		GetWorld()->DestroyActor(ThePawn);
+	}
+}
+
 // Validation
 bool ANetworkPlayerController::ServerSpawn_Validate() {
+	return true;
+}
+
+bool ANetworkPlayerController::ServerDelete_Validate() {
 	return true;
 }
 

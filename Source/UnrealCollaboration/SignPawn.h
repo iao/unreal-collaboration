@@ -23,6 +23,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing=OnRep_TextActor)
 	ANetworkTextRenderActor* TextActor;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = SpawnInfo)
+	FString DefaultText;
+	
 	UFUNCTION()
 	void OnRep_TextActor();
 	

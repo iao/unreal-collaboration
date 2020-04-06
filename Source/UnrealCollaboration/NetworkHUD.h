@@ -17,13 +17,23 @@ class ANetworkHUD : public AHUD {
 	virtual void BeginPlay() override;
 
 public:
-	ANetworkHUD();
-
 	UFUNCTION()
 	void Confirm();
+
+	UFUNCTION()
+	void Delete();
+	
 	void SetVisible(bool visible);
+	
 protected:
-	TSubclassOf<class USignWidget> PlayerUIClass;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = SpawnInfo)
+	TSubclassOf<USignWidget> PlayerUIClass;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = SpawnInfo)
+	FString DefaultText;
+	
+	ESlateVisibility fromBoolean(bool boolean);
+	
 	class USignWidget* PlayerUI;
 
 	FText text;

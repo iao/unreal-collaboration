@@ -30,10 +30,10 @@ protected:
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_Pawn)
 	bool isPawn;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = SpawnInfo)
 	TSubclassOf<APawn> SpawnableClass;
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = SpawnInfo)
 	float FindDistance;
 public:
 	UPROPERTY(EditAnywhere)
@@ -47,14 +47,24 @@ public:
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Character")
 	void UponInfoChanged();
+
+	/** Simple function checking if the rank is suitable for administrative controls */
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Character")
+	bool HasSelectorAuthority();
 	
 	ANetworkPlayerController(const FObjectInitializer& ObjectInitializer);
 	virtual void SetupInputComponent() override;
 	virtual void Tick(float DeltaTime) override;
 	void Spawn();
 	void Hide();
+
+	UFUNCTION()
+	void Delete();
 	void OnRep_Pawn();
 	
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerSpawn();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerDelete();
 };

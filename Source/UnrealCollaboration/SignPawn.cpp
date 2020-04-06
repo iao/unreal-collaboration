@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #include "SignPawn.h"
 #include "UnrealNetwork.h"
+#include "NetworkHUD.h"
 #include "NetworkPlayerController.h"
 
 // Sets default values
@@ -18,7 +19,7 @@ void ASignPawn::BeginPlay() {
 	if (GetLocalRole() == ROLE_Authority) {
 		TextActor = GetWorld()->SpawnActor<ANetworkTextRenderActor>(ANetworkTextRenderActor::StaticClass(),
 					GetActorLocation() + FVector(14.f, 75.f, 20.f).RotateAngleAxis(GetActorRotation().Roll, FVector(0, 0, 1)), GetActorRotation());
-		TextActor->text = FText::FromString("hello");
+		TextActor->text = FText::FromString(DefaultText);
 	}
 
 	// Hide the actor if we need to

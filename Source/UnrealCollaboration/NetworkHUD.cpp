@@ -1,34 +1,34 @@
 // Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
 
 #include "NetworkHUD.h"
+#include "NetworkPlayerController.h"
 #include "Engine/Canvas.h"
 #include "CanvasItem.h"
 #include "UObject/ConstructorHelpers.h"
 
-ANetworkHUD::ANetworkHUD() {
-	// TODO: Allow this to be changed
-	ConstructorHelpers::FClassFinder<USignWidget> UIClassFinder(TEXT("/Game/Blueprints/SignWidget"));
-	PlayerUIClass = UIClassFinder.Class;
-	
-	text = FText::FromString(FString(TEXT("Please type text here")));
-}
-
 void ANetworkHUD::BeginPlay() {
 	Super::BeginPlay();
 
-	PlayerUI = CreateWidget<USignWidget>(GetOwningPlayerController(), PlayerUIClass);
+	PlayerUI = CreateWidget<USignWidget>(GetOwningPlayerController(), PlayerUIClass->GetAuthoritativeClass());
 	if (PlayerUI) {
 		PlayerUI->Owner = this;
-		PlayerUI->SetText(text);
+		PlayerUI->SetText(FText::FromString(DefaultText));
 		PlayerUI->AddToViewport();
 		PlayerUI->SetVisibility(ESlateVisibility::Hidden);
 	} 
 }
 
+ESlateVisibility ANetworkHUD::fromBoolean(bool boolean) {
+	return boolean ? ESlateVisibility::Visible : ESlateVisibility::Hidden;
+}
+
 void ANetworkHUD::SetVisible(bool visible) {
+	ESlateVisibility visability = fromBoolean(visible);
+	ANetworkPlayerController* controller = Cast<ANetworkPlayerController>(GetOwningPlayerController());
+	
 	if (PlayerUI) {
-		if (visible) PlayerUI->SetVisibility(ESlateVisibility::Visible);
-		else PlayerUI->SetVisibility(ESlateVisibility::Hidden);
+		PlayerUI->SetVisibility(visability);
+		if(visible) PlayerUI->DeleteButton->SetVisibility(fromBoolean(controller->HasSelectorAuthority()));
 	}
 }
 
@@ -38,4 +38,9 @@ void ANetworkHUD::Confirm() {
 
 	ASignPawn* pawn = Cast<ASignPawn>(GetOwningPawn());
 	pawn->SetText(text);
+}
+
+void ANetworkHUD::Delete() {
+	ANetworkPlayerController* controller = Cast<ANetworkPlayerController>(GetOwningPlayerController());
+	controller->Delete();
 }
