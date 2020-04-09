@@ -36,6 +36,10 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = SpawnInfo)
 		TSubclassOf<ASignPawn> SpawnableClass;
 
+	/** Where to spawn the SpawnableClass relative to the camera. */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = SpawnInfo)
+		float SpawnDistance;
+
 	/** The distance which we look for a sign around the user instead of spawning a new one */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = SpawnInfo)
 		float FindDistance;

@@ -11,6 +11,7 @@
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -49,9 +50,10 @@ ANetworkCharacter::ANetworkCharacter() {
 	BoxComponent->SetIsReplicated(true);
 
 	// Setup TextRenderActor
+	// TODO: New users are not given correct name
 	TextRenderComponent = CreateDefaultSubobject<UTextRenderComponent>(TEXT("TextRenderComponent"));
 	TextRenderComponent->SetupAttachment(BoxComponent);
-	TextRenderComponent->SetIsReplicated(true);
+	TextRenderComponent->SetIsReplicated(true); // TODO: Something is wrong if we have no info.json?
 	TextRenderComponent->SetHorizontalAlignment(EHTA_Center);
 
 	// Allow ticks
@@ -69,17 +71,17 @@ void ANetworkCharacter::BeginPlay() {
 
 	// Show or hide meshes based on if we are locally controlling the character
 	if (IsLocallyControlled()) {
-		TextRenderComponent->SetVisibility(false);
-		Mesh3P->SetVisibility(false);
-		Mesh1P->SetVisibility(true);
+		if(TextRenderComponent) TextRenderComponent->SetVisibility(false);
+		if(Mesh3P) Mesh3P->SetVisibility(false);
+		if(Mesh1P) Mesh1P->SetVisibility(true);
 	} else {
-		TextRenderComponent->SetVisibility(true);
-		Mesh3P->SetVisibility(true);
-		Mesh1P->SetVisibility(false);
+		if (TextRenderComponent) TextRenderComponent->SetVisibility(true);
+		if (Mesh3P) Mesh3P->SetVisibility(true);
+		if (Mesh1P) Mesh1P->SetVisibility(false);
 	}
 
 	// Show or hide the the mesh based on whether or not we're using motion controllers.
-	Mesh1P->SetHiddenInGame(bUsingMotionControllers, true);
+	//Mesh1P->SetHiddenInGame(bUsingMotionControllers, true);
 }
 
 void ANetworkCharacter::Tick(float DeltaTime) {
@@ -88,7 +90,7 @@ void ANetworkCharacter::Tick(float DeltaTime) {
 	// Set the text to the controllers text
 	if (GetLocalRole() != ROLE_Authority) {
 		ANetworkPlayerController* controller = Cast<ANetworkPlayerController>(GetWorld()->GetFirstPlayerController());
-		TextRenderComponent->SetText(FText::FromString(controller->username));
+		if (TextRenderComponent) TextRenderComponent->SetText(FText::FromString(controller->username));
 	}
 	
 	// Replicate the pitch of the camera
@@ -97,6 +99,14 @@ void ANetworkCharacter::Tick(float DeltaTime) {
 		NewRot.Pitch = RemoteViewPitch * 360.0f / 255.0f;
 
 		FirstPersonCameraComponent->SetRelativeRotation(NewRot);
+	}
+
+	// Face name toward player
+	if(HasActiveCameraComponent()) {
+		FVector PlayerLocation = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->GetCameraLocation();
+		FRotator NewRotationAll = UKismetMathLibrary::FindLookAtRotation(PlayerLocation, GetActorLocation());
+		FRotator NewRotation = FRotator(GetActorRotation().Pitch, 180 + NewRotationAll.Yaw, NewRotationAll.Roll);
+		if (TextRenderComponent) TextRenderComponent->SetWorldRotation(NewRotation);
 	}
 
 	// Slow down when not jumping

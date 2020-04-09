@@ -23,13 +23,15 @@ To build a server built off of this project, please do the following:
 #### Linux
 1. [Get the source for unreal engine](https://www.unrealengine.com/en-US/ue4-on-github)
 2. Set the project to use the source build of Unreal
-3. Compile & run the project
-4. Package the project for **BOTH** Linux and Windows, save in a known location
-5. Back in the project solution, select `Development Server` as the target and `Linux` as the architecture and build
-6. Copy the build project (`TODO:PATH`) to where you saved the packaged build (`/Packaged/Binaries/Linux/`)
-7. Copy the packaged project to the deployment server
-8. Setup execute permissions of the server
-9. Run the server, and connect from your client
+3. Create a file in `Contents` called `hostname.txt` and type your [**publically accessible IPv4 Address**](https://whatismyipaddress.com/) there. This is where users will connect to when running Unreal Selector, so ensure that you have ports 7777-> open.
+4. Make Blueprints from the classes available in Unreal Colloboartion.
+5. Compile & run the project
+6. Package the project for **BOTH** Linux and Windows, save in a known location
+7. Back in the project solution, select `Development Server` as the target and `Linux` as the architecture and build
+8. Copy the build project (`TODO:PATH`) to where you saved the packaged build (`/Packaged/Binaries/Linux/`)
+9. Copy the packaged project to the deployment server
+10. Setup execute permissions of the server
+11. Run the server, and connect from your client
 
 #### Windows
 **Currently not supported**

@@ -109,6 +109,7 @@ void ANetworkPlayerController::Tick(float DeltaTime) {
 		counter += (DeltaTime * 1000);
 		if (counter > 2 * counter_max) counter = 0;
 
+		// TODO: This doesn't work!
 		// Call /keepalive every counter_max milliseconds, with a random offset
 		if ((counter - random_num) % counter_max <= (DeltaTime * 1000)) {
 			FKeepAliveStruct keepalive;
@@ -158,6 +159,7 @@ void ANetworkPlayerController::ServerSpawn_Implementation() {
 
 		// Possess and update state
 		Possess(Actor);
+		
 		isPawn = false;
 	} else {
 		// Spawn the blueprinted pawn
@@ -191,7 +193,8 @@ void ANetworkPlayerController::ServerSpawn_Implementation() {
 
 		// Otherwise Make the pawn from blueprinted pawn
 		// Set the location etc of the new pawn
-		const FVector Location = Actor->GetActorLocation() + FVector(0.f, 200.f, 0).RotateAngleAxis(Actor->GetActorRotation().Roll, FVector(0, 0, 1));
+		FVector NewLocation = PlayerCameraManager->GetCameraLocation() + (PlayerCameraManager->GetActorForwardVector() * SpawnDistance);
+		FVector Location = FVector(NewLocation.X, NewLocation.Y, Actor->GetActorLocation().Z);
 		FActorSpawnParameters Params = FActorSpawnParameters();
 		Params.Instigator = Actor;
 

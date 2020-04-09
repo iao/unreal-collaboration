@@ -19,6 +19,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Disable")
 		void HideActor(bool toHide);
 
+	/** Camera component */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		class UCameraComponent* CameraComponent;
+	
 	/** The box where the text render actor is attached to */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class UBoxComponent* BoxComponent;

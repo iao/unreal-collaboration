@@ -3,18 +3,31 @@
 #include "SignPawn.h"
 #include "Net/UnrealNetwork.h"
 #include "NetworkHUD.h"
+#include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "NetworkPlayerController.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 ASignPawn::ASignPawn() {
 	// Setup Defaults
 	if(!TextActorClass) TextActorClass = ANetworkTextRenderActor::StaticClass();
+
+	// Clear the MeshComponent
+	GetMeshComponent()->SetStaticMesh(nullptr);
+	
+	// Setup CameraComponent
+	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+	CameraComponent->SetupAttachment(RootComponent);
+	CameraComponent->SetRelativeLocation(FVector(180.0f, 0.0f, 80.0f)); // Position the camera
+	CameraComponent->SetRelativeRotation(FRotator(0.0f, 340.0f, 180.0f)); // Rotate the camera
+	CameraComponent->bUsePawnControlRotation = false; // Keep camera at a fixed rotation
 	
 	// Setup BoxComponent
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
-	BoxComponent->SetupAttachment(GetParentComponent());
-	BoxComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f)); // Position the box
+	BoxComponent->SetupAttachment(GetMeshComponent());
+	BoxComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 175.0f)); // Position the box
 	BoxComponent->SetBoxExtent(FVector(10.0f, 10.0f, 10.0f));
 
 	// Allow ticks
@@ -32,8 +45,7 @@ void ASignPawn::BeginPlay() {
 
 	// If we are the server, then spawn the text actor
 	if (GetLocalRole() == ROLE_Authority) {
-		// TODO: Rotate to camera?
-		TextActor = GetWorld()->SpawnActor<ANetworkTextRenderActor>(TextActorClass->GetAuthoritativeClass(), GetActorLocation() + BoxComponent->GetRelativeLocation(), BoxComponent->GetComponentRotation());
+		TextActor = GetWorld()->SpawnActor<ANetworkTextRenderActor>(TextActorClass->GetAuthoritativeClass(), BoxComponent->GetComponentLocation(), BoxComponent->GetComponentRotation());
 		TextActor->text = FText::FromString(DefaultText);
 	}
 	
@@ -45,13 +57,16 @@ void ASignPawn::BeginPlay() {
 }
 
 void ASignPawn::Tick(float DeltaTime) {
-	// Face toward player
+	// Face toward player in X
 	if (GetLocalRole() != ROLE_Authority && TextActor) {
-		FRotator NewRotation = GetActorRotation() + FRotator(0.f, 1.f, 0.f);
-		SetActorRotation(NewRotation);
+		FVector PlayerLocation = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->GetCameraLocation();
+		FRotator NewRotationAll = UKismetMathLibrary::FindLookAtRotation(PlayerLocation, GetActorLocation());
+		FRotator NewRotation = FRotator(GetActorRotation().Pitch, NewRotationAll.Yaw, NewRotationAll.Roll);
+		GetMeshComponent()->SetWorldRotation(NewRotation);
 
-		FRotator TextNewRotation = TextActor->GetActorRotation() + FRotator(0.f, 1.f, 0.f);
-		TextActor->SetActorRotation(NewRotation);
+		FRotator TextRotationAll = UKismetMathLibrary::FindLookAtRotation(PlayerLocation, TextActor->GetActorLocation());
+		FRotator TextRotation = FRotator(TextActor->GetActorRotation().Pitch, 180 + TextRotationAll.Yaw, TextRotationAll.Roll);
+		TextActor->SetActorRotation(TextRotation);
 	}
 }
 
