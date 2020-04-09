@@ -1,11 +1,26 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// By Paul Graham <p@ul.ms>
+
 #include "SignPawn.h"
-#include "UnrealNetwork.h"
+#include "Net/UnrealNetwork.h"
 #include "NetworkHUD.h"
+#include "Components/BoxComponent.h"
 #include "NetworkPlayerController.h"
 
 // Sets default values
 ASignPawn::ASignPawn() {
+	// Setup Defaults
+	if(!TextActorClass) TextActorClass = ANetworkTextRenderActor::StaticClass();
+	
+	// Setup BoxComponent
+	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
+	BoxComponent->SetupAttachment(GetParentComponent());
+	BoxComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f)); // Position the box
+	BoxComponent->SetBoxExtent(FVector(10.0f, 10.0f, 10.0f));
+
+	// Allow ticks
+	PrimaryActorTick.bCanEverTick = true;
+	
+	// Set defaults
 	bAddDefaultMovementBindings = false;
 	SetReplicates(true);
 	SetActorEnableCollision(false);
@@ -17,15 +32,26 @@ void ASignPawn::BeginPlay() {
 
 	// If we are the server, then spawn the text actor
 	if (GetLocalRole() == ROLE_Authority) {
-		TextActor = GetWorld()->SpawnActor<ANetworkTextRenderActor>(ANetworkTextRenderActor::StaticClass(),
-					GetActorLocation() + FVector(14.f, 75.f, 20.f).RotateAngleAxis(GetActorRotation().Roll, FVector(0, 0, 1)), GetActorRotation());
+		// TODO: Rotate to camera?
+		TextActor = GetWorld()->SpawnActor<ANetworkTextRenderActor>(TextActorClass->GetAuthoritativeClass(), GetActorLocation() + BoxComponent->GetRelativeLocation(), BoxComponent->GetComponentRotation());
 		TextActor->text = FText::FromString(DefaultText);
 	}
-
+	
 	// Hide the actor if we need to
 	if (GetLocalRole() != ROLE_Authority) {
 		APlayerController* controller = GetWorld()->GetFirstPlayerController();
-		if(controller) SetActorHiddenInGame(Cast<ANetworkPlayerController>(controller)->isHidden);
+		if (controller) SetActorHiddenInGame(Cast<ANetworkPlayerController>(controller)->isHidden);
+	}
+}
+
+void ASignPawn::Tick(float DeltaTime) {
+	// Face toward player
+	if (GetLocalRole() != ROLE_Authority && TextActor) {
+		FRotator NewRotation = GetActorRotation() + FRotator(0.f, 1.f, 0.f);
+		SetActorRotation(NewRotation);
+
+		FRotator TextNewRotation = TextActor->GetActorRotation() + FRotator(0.f, 1.f, 0.f);
+		TextActor->SetActorRotation(NewRotation);
 	}
 }
 
@@ -55,7 +81,7 @@ void ASignPawn::OnRep_TextActor() {
 	// Set the actor to hide
 	if (GetLocalRole() != ROLE_Authority) {
 		APlayerController* controller = GetWorld()->GetFirstPlayerController();
-		if(controller && TextActor) TextActor->HideActor(Cast<ANetworkPlayerController>(controller)->isHidden);
+		if (controller && TextActor) TextActor->HideActor(Cast<ANetworkPlayerController>(controller)->isHidden);
 	}
 }
 

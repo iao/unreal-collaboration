@@ -1,11 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// By Paul Graham <p@ul.ms>
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/DefaultPawn.h"
 #include "Engine/TextRenderActor.h"
-#include "Components/TextRenderComponent.h"
 #include "NetworkTextRenderActor.h"
 #include "SignPawn.generated.h"
 
@@ -18,23 +17,33 @@ public:
 	ASignPawn();
 
 	UFUNCTION(BlueprintCallable, Category = "Disable")
-	void HideActor(bool toHide);
+		void HideActor(bool toHide);
+
+	/** The box where the text render actor is attached to */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		class UBoxComponent* BoxComponent;
 	
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing=OnRep_TextActor)
-	ANetworkTextRenderActor* TextActor;
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_TextActor)
+		ANetworkTextRenderActor* TextActor;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = SpawnInfo)
-	FString DefaultText;
-	
+		TSubclassOf<ANetworkTextRenderActor> TextActorClass;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = SpawnInfo)
+		FString DefaultText;
+
 	UFUNCTION()
-	void OnRep_TextActor();
-	
+		void OnRep_TextActor();
+
 	void SetText(FText text);
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerSetText(const FText& text);
-	
+		void ServerSetText(const FText& text);
+
 protected:
+	/** Called every frame */
+	virtual void Tick(float DeltaTime) override;
+	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 

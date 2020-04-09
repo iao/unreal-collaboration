@@ -24,7 +24,7 @@ To build a server built off of this project, please do the following:
 1. [Get the source for unreal engine](https://www.unrealengine.com/en-US/ue4-on-github)
 2. Set the project to use the source build of Unreal
 3. Compile & run the project
-4. Package the project for **BOTH* Linux and Windows, save in a known location
+4. Package the project for **BOTH** Linux and Windows, save in a known location
 5. Back in the project solution, select `Development Server` as the target and `Linux` as the architecture and build
 6. Copy the build project (`TODO:PATH`) to where you saved the packaged build (`/Packaged/Binaries/Linux/`)
 7. Copy the packaged project to the deployment server
@@ -33,7 +33,3 @@ To build a server built off of this project, please do the following:
 
 #### Windows
 **Currently not supported**
-
-### Notes
-Ability to hide the signs
-Customising characters

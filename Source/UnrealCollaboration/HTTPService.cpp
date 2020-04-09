@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// By Paul Graham <p@ul.ms>
 
 #include "HTTPService.h"
 #include "GameFramework/Actor.h"
@@ -84,5 +84,14 @@ void AHTTPService::Info(FString URL, FInfoStruct_Request info, ANetworkPlayerCon
 
 	TSharedRef<IHttpRequest> Request = PostRequest(URL, ContentJsonString);
 	Request->OnProcessRequestComplete().BindUObject(controller, &ANetworkPlayerController::InfoResponce);
+	Send(Request);
+}
+
+void AHTTPService::Time(FString URL, FTimeStruct_Request time, ANetworkPlayerController* controller) {
+	FString ContentJsonString;
+	GetJsonStringFromStruct<FTimeStruct_Request>(time, ContentJsonString);
+
+	TSharedRef<IHttpRequest> Request = PostRequest(URL, ContentJsonString);
+	Request->OnProcessRequestComplete().BindUObject(controller, &ANetworkPlayerController::TimeResponce);
 	Send(Request);
 }

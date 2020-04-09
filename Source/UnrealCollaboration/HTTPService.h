@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// By Paul Graham <p@ul.ms>
 
 #pragma once
 
@@ -26,17 +26,18 @@ private:
 
 public:
 	static bool ResponseIsValid(FHttpResponsePtr Response, bool bWasSuccessful);
-	
+
 	template <typename StructType>
 	static void GetJsonStringFromStruct(StructType FilledStruct, FString& StringOutput);
 	template <typename StructType>
 	static void GetStructFromJsonString(FString content, StructType& StructOutput);
 
 	static FInfoJSONStruct GetInfoJSON();
-	
+
 	AHTTPService();
 	virtual void BeginPlay() override;
 
 	static void KeepAlive(FString URL, FKeepAliveStruct keepalive, ANetworkPlayerController* controller);
 	static void Info(FString URL, FInfoStruct_Request info, ANetworkPlayerController* controller);
+	static void Time(FString URL, FTimeStruct_Request time, ANetworkPlayerController* controller);
 };

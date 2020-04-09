@@ -1,18 +1,37 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// By Paul Graham <p@ul.ms>
 
 #include "NetworkPlayerController.h"
-#include "ConstructorHelpers.h"
+#include "UObject/ConstructorHelpers.h"
 #include "Engine.h"
 #include "HTTPService.h"
-#include "UnrealNetwork.h"
+#include "Net/UnrealNetwork.h"
 #include "Math/UnrealMathUtility.h"
 
 // Constructor
 ANetworkPlayerController::ANetworkPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
+	// Setup Defaults
+	if (!SpawnableClass) SpawnableClass = ASignPawn::StaticClass();
 	isPawn = false;
 	isHidden = false;
-	counter_max = (60 * 60 * 1); // TODO: Allow for this to be set via config JSON
+	counter_max = (60 * 1000 * 15); // Default is 15 minutes between calls
 	random_num = FMath::RandRange(1, 100);
+}
+
+// Called after constructor
+void ANetworkPlayerController::BeginPlay() {
+	// Get how long between /keepalive calls
+	if (GetLocalRole() != ROLE_Authority) {
+		FTimeStruct_Request time_r;
+		time_r.session = AHTTPService::GetInfoJSON().session;
+		FString timeURL = AHTTPService::GetInfoJSON().url + "/api/project/time";
+
+		if (time_r.session != "" && timeURL != "") {
+			AHTTPService::Time(timeURL, time_r, this);
+		}
+	}
+
+	// Request Information about the user
+	RequestInfo();
 }
 
 // Simple warning if we failed to keep alive
@@ -38,7 +57,9 @@ void ANetworkPlayerController::RequestInfo() {
 // Update the info variable from the request
 void ANetworkPlayerController::InfoResponce(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
 	if (!AHTTPService::ResponseIsValid(Response, bWasSuccessful)) {
-		UE_LOG(LogTemp, Warning, TEXT("Failed to get info! Assuming info is 1."));
+		UE_LOG(LogTemp, Warning, TEXT("Failed to get info! Setting defaults."));
+		username = "user";
+		rank = "user";
 		info = 1;
 		UponInfoChanged();
 		return;
@@ -46,9 +67,22 @@ void ANetworkPlayerController::InfoResponce(FHttpRequestPtr Request, FHttpRespon
 
 	FInfoStruct_Responce responce;
 	FJsonObjectConverter::JsonObjectStringToUStruct<FInfoStruct_Responce>(Response->GetContentAsString(), &responce, 0, 0);
+	username = responce.username;
 	info = responce.info;
 	rank = responce.rank;
 	UponInfoChanged();
+}
+
+// Update the counter_max variable from the request
+void ANetworkPlayerController::TimeResponce(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
+	if (!AHTTPService::ResponseIsValid(Response, bWasSuccessful)) {
+		UE_LOG(LogTemp, Warning, TEXT("Failed to get time! Assuming time is 15 minutes."));
+		return;
+	}
+
+	FTimeStruct_Responce responce;
+	FJsonObjectConverter::JsonObjectStringToUStruct<FTimeStruct_Responce>(Response->GetContentAsString(), &responce, 0, 0);
+	counter_max = responce.time * 1000;
 }
 
 // Setup inputs for the controller
@@ -57,7 +91,7 @@ void ANetworkPlayerController::SetupInputComponent() {
 		InputComponent = NewObject<UInputComponent>(this, TEXT("Cool_InputComponent"));
 		InputComponent->RegisterComponent();
 	}
-	
+
 	check(InputComponent);
 	if (InputComponent) {
 		// Spawn a sign
@@ -70,10 +104,13 @@ void ANetworkPlayerController::SetupInputComponent() {
 void ANetworkPlayerController::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
 
+	// Ensure the server stays alive
 	if (GetLocalRole() != ROLE_Authority) {
-		counter++;
-		if (counter > 3 * counter_max) counter = 0;
-		if ((counter - random_num) % counter_max == 0) {
+		counter += (DeltaTime * 1000);
+		if (counter > 2 * counter_max) counter = 0;
+
+		// Call /keepalive every counter_max milliseconds, with a random offset
+		if ((counter - random_num) % counter_max <= (DeltaTime * 1000)) {
 			FKeepAliveStruct keepalive;
 			keepalive.session = AHTTPService::GetInfoJSON().session;
 			keepalive.title = AHTTPService::GetInfoJSON().title;
@@ -88,7 +125,7 @@ void ANetworkPlayerController::Tick(float DeltaTime) {
 
 // Client side spawn function
 void ANetworkPlayerController::Spawn() {
-	if(!isHidden) ServerSpawn();
+	if (!isHidden) ServerSpawn();
 }
 
 // Hide all signs for the client
@@ -118,7 +155,7 @@ void ANetworkPlayerController::ServerSpawn_Implementation() {
 		// Find the instigator and possess
 		ANetworkCharacter* Actor = Cast<ANetworkCharacter>(ThePawn->GetInstigator());
 		ThePawn->SetInstigator(NULL);
-		
+
 		// Possess and update state
 		Possess(Actor);
 		isPawn = false;
@@ -130,11 +167,11 @@ void ANetworkPlayerController::ServerSpawn_Implementation() {
 		// Find the pawn without an instigator closest to Actor
 		ASignPawn* FoundPawn = NULL;
 		float min = FindDistance + 1.0f;
-		for(TActorIterator<ASignPawn> CubeItr(GetWorld()); CubeItr; ++CubeItr) {
+		for (TActorIterator<ASignPawn> CubeItr(GetWorld()); CubeItr; ++CubeItr) {
 			ASignPawn* ItrPawn = Cast<ASignPawn>(*CubeItr);
-			if(ItrPawn) {
+			if (ItrPawn) {
 				float distance = FVector::Dist(ItrPawn->GetActorLocation(), Actor->GetActorLocation());
-				if(distance <= FindDistance && !ItrPawn->GetInstigator() && distance < min) {
+				if (distance <= FindDistance && !ItrPawn->GetInstigator() && distance < min) {
 					min = distance;
 					FoundPawn = ItrPawn;
 				}
@@ -151,15 +188,16 @@ void ANetworkPlayerController::ServerSpawn_Implementation() {
 			isPawn = true;
 			return;
 		}
-		
+
 		// Otherwise Make the pawn from blueprinted pawn
 		// Set the location etc of the new pawn
-		const FVector Location = Actor->GetActorLocation() + FVector(0.f, 500.f, 0).RotateAngleAxis(Actor->GetActorRotation().Roll, FVector(0, 0, 1));
+		const FVector Location = Actor->GetActorLocation() + FVector(0.f, 200.f, 0).RotateAngleAxis(Actor->GetActorRotation().Roll, FVector(0, 0, 1));
 		FActorSpawnParameters Params = FActorSpawnParameters();
 		Params.Instigator = Actor;
 
 		// Spawn the pawn to the world & update status
-		ThePawn = GetWorld()->SpawnActor<APawn>(SpawnableClass->GetAuthoritativeClass(), Location, FRotator(0.f, 0.f, 360.f - Actor->GetActorRotation().Roll), Params);
+		ThePawn = GetWorld()->SpawnActor<ASignPawn>(SpawnableClass->GetAuthoritativeClass(), Location, FRotator(0.f, 0.f, 360.f - Actor->GetActorRotation().Roll), Params);
+		UE_LOG(LogTemp, Warning, TEXT("Successfully spawned a sign @ %f, %f"), ThePawn->GetActorLocation().X, ThePawn->GetActorLocation().Y);
 		Possess(ThePawn);
 		isPawn = true;
 	}
@@ -167,23 +205,19 @@ void ANetworkPlayerController::ServerSpawn_Implementation() {
 
 // Server side delete function
 void ANetworkPlayerController::ServerDelete_Implementation() {
-	// Check if we can
-	if (HasSelectorAuthority()) {
-		// Find the instigator and possess
-		ANetworkCharacter* Actor = Cast<ANetworkCharacter>(ThePawn->GetInstigator());
-		ThePawn->SetInstigator(NULL);
+	// Find the instigator and possess
+	ANetworkCharacter* Actor = Cast<ANetworkCharacter>(ThePawn->GetInstigator());
 
-		// Possess and update state
-		Possess(Actor);
-		isPawn = false;
+	// Possess and update state
+	Possess(Actor);
+	isPawn = false;
 
-		// Delete the pawn & text actors
-		GetWorld()->DestroyActor(Cast<ASignPawn>(ThePawn)->TextActor);
-		GetWorld()->DestroyActor(ThePawn);
-	}
+	// Delete the pawn & text actors
+	GetWorld()->DestroyActor(ThePawn->TextActor);
+	GetWorld()->DestroyActor(ThePawn);
 }
 
-// Validation
+// Validation functions
 bool ANetworkPlayerController::ServerSpawn_Validate() {
 	return true;
 }

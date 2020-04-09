@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// By Paul Graham <p@ul.ms>
 
 #pragma once
 
@@ -18,53 +18,66 @@ class UNREALCOLLABORATION_API ANetworkPlayerController : public APlayerControlle
 	GENERATED_BODY()
 
 protected:
-	int counter, counter_max, random_num;
-	APawn* ThePawn;
+	long int counter, counter_max, random_num;
+	ASignPawn* ThePawn;
 
+	/** A customization string from Unreal Selector, should match options there */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = PlayerInfo)
-	int info;
+		int info;
 
+	/** The rank of the user as a string, used to find if the user can do privileged operations */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = PlayerInfo)
-	FString rank;
+		FString rank;
 
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_Pawn)
-	bool isPawn;
+		bool isPawn;
 
+	/** The sign blueprint class to spawn */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = SpawnInfo)
-	TSubclassOf<APawn> SpawnableClass;
-	
+		TSubclassOf<ASignPawn> SpawnableClass;
+
+	/** The distance which we look for a sign around the user instead of spawning a new one */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = SpawnInfo)
-	float FindDistance;
+		float FindDistance;
+
 public:
+	/** The users username from Unreal Selector */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = PlayerInfo)
+		FString username;
+
 	UPROPERTY(EditAnywhere)
-	bool isHidden;
+		bool isHidden;
 
 	void KeepAliveResponce(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void InfoResponce(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	void TimeResponce(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
+	/** Ask Unreal Selector for information about the player, `UponInfoChanged()` is the callback function */
 	UFUNCTION(BlueprintCallable, Category = "Character")
-	void RequestInfo();
-	
+		void RequestInfo();
+
+	/** Callback function for `RequestInfo()` */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Character")
-	void UponInfoChanged();
+		void UponInfoChanged();
 
 	/** Simple function checking if the rank is suitable for administrative controls */
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Character")
-	bool HasSelectorAuthority();
-	
+		bool HasSelectorAuthority();
+
 	ANetworkPlayerController(const FObjectInitializer& ObjectInitializer);
+	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 	virtual void Tick(float DeltaTime) override;
 	void Spawn();
 	void Hide();
 
 	UFUNCTION()
-	void Delete();
+		void Delete();
 	void OnRep_Pawn();
-	
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerSpawn();
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerDelete();
+		void ServerSpawn();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerDelete();
 };

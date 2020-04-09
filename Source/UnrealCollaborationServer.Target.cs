@@ -3,12 +3,12 @@
 using UnrealBuildTool;
 using System.Collections.Generic;
 
-[SupportedPlatforms(UnrealPlatformClass.Server)]
 public class UnrealCollaborationServerTarget : TargetRules
 {
-       public UnrealCollaborationServerTarget(TargetInfo Target) : base(Target)  
-       {
-        Type = TargetType.Server;
-        ExtraModuleNames.Add("UnrealCollaboration");    
-       }
+	public UnrealCollaborationServerTarget(TargetInfo Target) : base(Target)
+	{
+		Type = TargetType.Server;
+		DefaultBuildSettings = BuildSettingsVersion.V2;
+		ExtraModuleNames.Add("UnrealCollaboration");
+	}
 }

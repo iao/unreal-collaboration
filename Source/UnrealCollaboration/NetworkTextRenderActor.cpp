@@ -1,13 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+// By Paul Graham <p@ul.ms>
 
 #include "NetworkTextRenderActor.h"
-#include "UnrealNetwork.h"
+#include "Net/UnrealNetwork.h"
 
 // Make the object
 ANetworkTextRenderActor::ANetworkTextRenderActor() {
-	GetTextRender()->SetTextRenderColor(FColor::White);
-	
+	GetTextRender()->SetHorizontalAlignment(EHTA_Center);
 	SetReplicates(true);
 }
 

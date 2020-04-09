@@ -1,6 +1,7 @@
-// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
+// Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 #include "UnrealCollaboration.h"
 #include "Modules/ModuleManager.h"
 
-IMPLEMENT_PRIMARY_GAME_MODULE(FDefaultGameModuleImpl, UnrealCollaboration, "UnrealCollaboration");
+IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, UnrealCollaboration, "UnrealCollaboration" );
+ 

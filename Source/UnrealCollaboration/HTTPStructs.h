@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// By Paul Graham <p@ul.ms>
 
 #pragma once
 
@@ -10,9 +10,9 @@ USTRUCT()
 struct FInfoJSONStruct {
 	GENERATED_BODY()
 		UPROPERTY() FString session;
-		UPROPERTY() FString title;
-		UPROPERTY() FString url;
-		UPROPERTY() int port;
+	UPROPERTY() FString title;
+	UPROPERTY() FString url;
+	UPROPERTY() int port;
 
 	FInfoJSONStruct() {}
 };
@@ -21,9 +21,25 @@ USTRUCT()
 struct FKeepAliveStruct {
 	GENERATED_BODY()
 		UPROPERTY() FString session;
-		UPROPERTY() FString title;
+	UPROPERTY() FString title;
 
 	FKeepAliveStruct() {}
+};
+
+USTRUCT()
+struct FTimeStruct_Request {
+	GENERATED_BODY()
+		UPROPERTY() FString session;
+
+	FTimeStruct_Request() {}
+};
+
+USTRUCT()
+struct FTimeStruct_Responce {
+	GENERATED_BODY()
+		UPROPERTY() int time;
+
+	FTimeStruct_Responce() {}
 };
 
 USTRUCT()
@@ -37,8 +53,9 @@ struct FInfoStruct_Request {
 USTRUCT()
 struct FInfoStruct_Responce {
 	GENERATED_BODY()
-		UPROPERTY() int info;
-		UPROPERTY() FString rank;
+		UPROPERTY() FString username;
+	UPROPERTY() int info;
+	UPROPERTY() FString rank;
 
 	FInfoStruct_Responce() {}
 };
@@ -49,12 +66,12 @@ class UNREALCOLLABORATION_API AHTTPStructs : public AActor {
 
 public:
 	AHTTPStructs();
-	
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 

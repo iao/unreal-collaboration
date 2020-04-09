@@ -1,14 +1,15 @@
-// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
+// By Paul Graham <p@ul.ms>
 
 #include "NetworkCharacter.h"
+#include "NetworkPlayerController.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
-#include "GameFramework/InputSettings.h"
+#include "Components/TextRenderComponent.h"
+#include "Components/BoxComponent.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
-#include "MotionControllerComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
@@ -18,7 +19,7 @@ ANetworkCharacter::ANetworkCharacter() {
 	GetCapsuleComponent()->InitCapsuleSize(55.0f, 96.0f);
 	if (IsRunningClientOnly()) GetCapsuleComponent()->SetHiddenInGame(false, true);
 	else GetCapsuleComponent()->SetHiddenInGame(true, true);
-	
+
 	// set our turn rates for input
 	BaseTurnRate = 45.f;
 	BaseLookUpRate = 45.f;
@@ -37,11 +38,25 @@ ANetworkCharacter::ANetworkCharacter() {
 	Mesh1P->SetRelativeRotation(FRotator(1.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-0.5f, -4.4f, -155.7f));
 
-	// TODO: Setup Mesh3P
+	// Create a mesh component that will be used when being viewed from a '3rd person' view (when not controlling this pawn)
+	Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh3P"));
+	Mesh3P->SetupAttachment(FirstPersonCameraComponent);
+
+	// Setup BoxComponent
+	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
+	BoxComponent->SetupAttachment(GetCapsuleComponent());
+	BoxComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 90.0f)); // Position the box
+	BoxComponent->SetIsReplicated(true);
+
+	// Setup TextRenderActor
+	TextRenderComponent = CreateDefaultSubobject<UTextRenderComponent>(TEXT("TextRenderComponent"));
+	TextRenderComponent->SetupAttachment(BoxComponent);
+	TextRenderComponent->SetIsReplicated(true);
+	TextRenderComponent->SetHorizontalAlignment(EHTA_Center);
 
 	// Allow ticks
 	PrimaryActorTick.bCanEverTick = true;
-	
+
 	// TODO: Setup movement
 	JumpMaxHoldTime = 100000.0f;
 	GetCharacterMovement()->GravityScale = 0.35f;
@@ -52,6 +67,17 @@ void ANetworkCharacter::BeginPlay() {
 	// Call the base class  
 	Super::BeginPlay();
 
+	// Show or hide meshes based on if we are locally controlling the character
+	if (IsLocallyControlled()) {
+		TextRenderComponent->SetVisibility(false);
+		Mesh3P->SetVisibility(false);
+		Mesh1P->SetVisibility(true);
+	} else {
+		TextRenderComponent->SetVisibility(true);
+		Mesh3P->SetVisibility(true);
+		Mesh1P->SetVisibility(false);
+	}
+
 	// Show or hide the the mesh based on whether or not we're using motion controllers.
 	Mesh1P->SetHiddenInGame(bUsingMotionControllers, true);
 }
@@ -59,6 +85,13 @@ void ANetworkCharacter::BeginPlay() {
 void ANetworkCharacter::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
 
+	// Set the text to the controllers text
+	if (GetLocalRole() != ROLE_Authority) {
+		ANetworkPlayerController* controller = Cast<ANetworkPlayerController>(GetWorld()->GetFirstPlayerController());
+		TextRenderComponent->SetText(FText::FromString(controller->username));
+	}
+	
+	// Replicate the pitch of the camera
 	if (!IsLocallyControlled()) {
 		FRotator NewRot = FirstPersonCameraComponent->GetRelativeRotation();
 		NewRot.Pitch = RemoteViewPitch * 360.0f / 255.0f;
@@ -66,6 +99,7 @@ void ANetworkCharacter::Tick(float DeltaTime) {
 		FirstPersonCameraComponent->SetRelativeRotation(NewRot);
 	}
 
+	// Slow down when not jumping
 	if (!bWasJumping && GetMovementComponent()->Velocity.Z > 1.5f) {
 		GetMovementComponent()->Velocity.Z -= GetMovementComponent()->GetMaxSpeed();
 	}
@@ -87,7 +121,6 @@ void ANetworkCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ANetworkCharacter::OnResetVR);
 
 	// Bind movement events
-	PlayerInputComponent->BindAxis("MoveUp", this, &ANetworkCharacter::MoveUp);
 	PlayerInputComponent->BindAxis("MoveForward", this, &ANetworkCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ANetworkCharacter::MoveRight);
 
@@ -100,11 +133,12 @@ void ANetworkCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	PlayerInputComponent->BindAxis("LookUpRate", this, &ANetworkCharacter::LookUpAtRate);
 }
 
-void ANetworkCharacter::MoveUp(float Value) {
-	if (Value != 0.0f) {
-		// add movement in that direction
-		AddMovementInput(GetActorUpVector(), Value);
-	}
+/** Called when unpossessed */
+void ANetworkCharacter::UnPossessed() {
+	Super::UnPossessed();
+
+	// Stop movement
+	GetCharacterMovement()->StopMovementImmediately();
 }
 
 void ANetworkCharacter::MoveForward(float Value) {
