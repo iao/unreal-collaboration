@@ -31,6 +31,9 @@ public:
 		ANetworkTextRenderActor* TextActor;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = SpawnInfo)
+		bool ShouldRotate = true;
+	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = SpawnInfo)
 		TSubclassOf<ANetworkTextRenderActor> TextActorClass;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = SpawnInfo)

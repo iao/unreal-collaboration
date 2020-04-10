@@ -51,13 +51,12 @@ ANetworkCharacter::ANetworkCharacter() {
 
 	// Setup TextRenderActor
 	// TODO: New users are not given correct name
-	// TODO: Change README - no more writing hostname.txt for us :P
-	// TODO: Need to change default gamemode for entry & transition levels to not have NetworkPlayerController there
+	// TODO: Get Mesh3P to work
 	// TODO: VR Support fully :)
 	// TODO: Fix /keepalive in the player controller
 	TextRenderComponent = CreateDefaultSubobject<UTextRenderComponent>(TEXT("TextRenderComponent"));
 	TextRenderComponent->SetupAttachment(BoxComponent);
-	TextRenderComponent->SetIsReplicated(true); // TODO: Something is wrong if we have no info.json?
+	TextRenderComponent->SetIsReplicated(true);
 	TextRenderComponent->SetHorizontalAlignment(EHTA_Center);
 
 	// Allow ticks
@@ -94,7 +93,7 @@ void ANetworkCharacter::Tick(float DeltaTime) {
 	// Set the text to the controllers text
 	if (GetLocalRole() != ROLE_Authority) {
 		ANetworkPlayerController* controller = Cast<ANetworkPlayerController>(GetWorld()->GetFirstPlayerController());
-		if (TextRenderComponent) TextRenderComponent->SetText(FText::FromString(controller->username));
+		if (TextRenderComponent && controller) TextRenderComponent->SetText(FText::FromString(controller->username));
 	}
 	
 	// Replicate the pitch of the camera

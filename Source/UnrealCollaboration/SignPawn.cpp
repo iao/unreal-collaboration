@@ -58,7 +58,7 @@ void ASignPawn::BeginPlay() {
 
 void ASignPawn::Tick(float DeltaTime) {
 	// Face toward player in X
-	if (GetLocalRole() != ROLE_Authority && TextActor) {
+	if (ShouldRotate && GetLocalRole() != ROLE_Authority && TextActor) {
 		FVector PlayerLocation = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->GetCameraLocation();
 		FRotator NewRotationAll = UKismetMathLibrary::FindLookAtRotation(PlayerLocation, GetActorLocation());
 		FRotator NewRotation = FRotator(GetActorRotation().Pitch, NewRotationAll.Yaw, NewRotationAll.Roll);

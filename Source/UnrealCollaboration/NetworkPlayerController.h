@@ -46,8 +46,8 @@ protected:
 
 public:
 	/** The users username from Unreal Selector */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = PlayerInfo)
-		FString username;
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = PlayerInfo)
+		FString username = "123";
 
 	UPROPERTY(EditAnywhere)
 		bool isHidden;
