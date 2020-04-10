@@ -51,6 +51,10 @@ ANetworkCharacter::ANetworkCharacter() {
 
 	// Setup TextRenderActor
 	// TODO: New users are not given correct name
+	// TODO: Change README - no more writing hostname.txt for us :P
+	// TODO: Need to change default gamemode for entry & transition levels to not have NetworkPlayerController there
+	// TODO: VR Support fully :)
+	// TODO: Fix /keepalive in the player controller
 	TextRenderComponent = CreateDefaultSubobject<UTextRenderComponent>(TEXT("TextRenderComponent"));
 	TextRenderComponent->SetupAttachment(BoxComponent);
 	TextRenderComponent->SetIsReplicated(true); // TODO: Something is wrong if we have no info.json?
@@ -59,7 +63,7 @@ ANetworkCharacter::ANetworkCharacter() {
 	// Allow ticks
 	PrimaryActorTick.bCanEverTick = true;
 
-	// TODO: Setup movement
+	// Setup movement
 	JumpMaxHoldTime = 100000.0f;
 	GetCharacterMovement()->GravityScale = 0.35f;
 	GetCharacterMovement()->AirControl = 1;

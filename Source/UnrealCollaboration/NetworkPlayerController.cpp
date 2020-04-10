@@ -109,7 +109,6 @@ void ANetworkPlayerController::Tick(float DeltaTime) {
 		counter += (DeltaTime * 1000);
 		if (counter > 2 * counter_max) counter = 0;
 
-		// TODO: This doesn't work!
 		// Call /keepalive every counter_max milliseconds, with a random offset
 		if ((counter - random_num) % counter_max <= (DeltaTime * 1000)) {
 			FKeepAliveStruct keepalive;
