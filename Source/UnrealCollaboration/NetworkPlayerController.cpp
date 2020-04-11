@@ -29,9 +29,6 @@ void ANetworkPlayerController::BeginPlay() {
 			AHTTPService::Time(timeURL, time_r, this);
 		}
 	}
-
-	// Request Information about the user
-	RequestInfo();
 }
 
 // Simple warning if we failed to keep alive
@@ -39,38 +36,6 @@ void ANetworkPlayerController::KeepAliveResponce(FHttpRequestPtr Request, FHttpR
 	if (!AHTTPService::ResponseIsValid(Response, bWasSuccessful)) {
 		UE_LOG(LogTemp, Warning, TEXT("Failed to keep server alive! May be kicked soon!"));
 	}
-}
-
-// Allow blueprints to ask for player info
-void ANetworkPlayerController::RequestInfo() {
-	if (GetLocalRole() != ROLE_Authority) {
-		FInfoStruct_Request info_r;
-		info_r.session = AHTTPService::GetInfoJSON().session;
-		FString URL = AHTTPService::GetInfoJSON().url + "/api/account/info";
-
-		if (info_r.session != "" && URL != "") {
-			AHTTPService::Info(URL, info_r, this);
-		}
-	}
-}
-
-// Update the info variable from the request
-void ANetworkPlayerController::InfoResponce(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
-	if (!AHTTPService::ResponseIsValid(Response, bWasSuccessful)) {
-		UE_LOG(LogTemp, Warning, TEXT("Failed to get info! Setting defaults."));
-		username = "user";
-		rank = "user";
-		info = 1;
-		UponInfoChanged();
-		return;
-	}
-
-	FInfoStruct_Responce responce;
-	FJsonObjectConverter::JsonObjectStringToUStruct<FInfoStruct_Responce>(Response->GetContentAsString(), &responce, 0, 0);
-	username = responce.username;
-	info = responce.info;
-	rank = responce.rank;
-	UponInfoChanged();
 }
 
 // Update the counter_max variable from the request
@@ -83,6 +48,16 @@ void ANetworkPlayerController::TimeResponce(FHttpRequestPtr Request, FHttpRespon
 	FTimeStruct_Responce responce;
 	FJsonObjectConverter::JsonObjectStringToUStruct<FTimeStruct_Responce>(Response->GetContentAsString(), &responce, 0, 0);
 	counter_max = responce.time * 1000;
+}
+
+// Check if the player matches the admin rank
+bool ANetworkPlayerController::HasSelectorAuthority() {
+	// Get a reference to the current actor
+	ANetworkCharacter* Actor = Cast<ANetworkCharacter>(GetPawnOrSpectator());
+
+	// Check if they are admin
+	if (Actor) return Actor->isAdmin;
+	else return false;
 }
 
 // Setup inputs for the controller
@@ -192,13 +167,13 @@ void ANetworkPlayerController::ServerSpawn_Implementation() {
 
 		// Otherwise Make the pawn from blueprinted pawn
 		// Set the location etc of the new pawn
-		FVector NewLocation = PlayerCameraManager->GetCameraLocation() + (PlayerCameraManager->GetActorForwardVector() * SpawnDistance);
+		FVector NewLocation = PlayerCameraManager->GetCameraLocation() + (PlayerCameraManager->GetCameraRotation().RotateVector(PlayerCameraManager->GetActorForwardVector()) * SpawnDistance);
 		FVector Location = FVector(NewLocation.X, NewLocation.Y, Actor->GetActorLocation().Z);
 		FActorSpawnParameters Params = FActorSpawnParameters();
 		Params.Instigator = Actor;
 
 		// Spawn the pawn to the world & update status
-		ThePawn = GetWorld()->SpawnActor<ASignPawn>(SpawnableClass->GetAuthoritativeClass(), Location, FRotator(0.f, 0.f, 360.f - Actor->GetActorRotation().Roll), Params);
+		ThePawn = GetWorld()->SpawnActor<ASignPawn>(SpawnableClass->GetAuthoritativeClass(), Location, FRotator(0.0f, 0.0f, 0.0f), Params);
 		UE_LOG(LogTemp, Warning, TEXT("Successfully spawned a sign @ %f, %f"), ThePawn->GetActorLocation().X, ThePawn->GetActorLocation().Y);
 		Possess(ThePawn);
 		isPawn = true;
@@ -219,7 +194,6 @@ void ANetworkPlayerController::ServerDelete_Implementation() {
 	GetWorld()->DestroyActor(ThePawn);
 }
 
-// Validation functions
 bool ANetworkPlayerController::ServerSpawn_Validate() {
 	return true;
 }

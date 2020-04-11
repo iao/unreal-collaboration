@@ -21,14 +21,6 @@ protected:
 	long int counter, counter_max, random_num;
 	ASignPawn* ThePawn;
 
-	/** A customization string from Unreal Selector, should match options there */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = PlayerInfo)
-		int info;
-
-	/** The rank of the user as a string, used to find if the user can do privileged operations */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = PlayerInfo)
-		FString rank;
-
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_Pawn)
 		bool isPawn;
 
@@ -45,27 +37,14 @@ protected:
 		float FindDistance;
 
 public:
-	/** The users username from Unreal Selector */
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = PlayerInfo)
-		FString username = "123";
-
 	UPROPERTY(EditAnywhere)
 		bool isHidden;
 
 	void KeepAliveResponce(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	void InfoResponce(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	void TimeResponce(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
-	/** Ask Unreal Selector for information about the player, `UponInfoChanged()` is the callback function */
-	UFUNCTION(BlueprintCallable, Category = "Character")
-		void RequestInfo();
-
-	/** Callback function for `RequestInfo()` */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Character")
-		void UponInfoChanged();
-
 	/** Simple function checking if the rank is suitable for administrative controls */
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Character")
+	UFUNCTION(BlueprintCallable, Category = "Character")
 		bool HasSelectorAuthority();
 
 	ANetworkPlayerController(const FObjectInitializer& ObjectInitializer);
@@ -78,7 +57,7 @@ public:
 	UFUNCTION()
 		void Delete();
 	void OnRep_Pawn();
-
+	
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerSpawn();
 

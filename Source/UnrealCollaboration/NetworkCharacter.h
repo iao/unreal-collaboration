@@ -4,8 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "HTTPStructs.h"
+#include "Runtime/Online/HTTP/Public/Http.h"
 #include "NetworkCharacter.generated.h"
 
+struct FInfoStruct_Responce;
 class UInputComponent;
 
 UCLASS(config = Game)
@@ -28,11 +31,12 @@ class ANetworkCharacter : public ACharacter {
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class UBoxComponent* BoxComponent;
 
+public:
 	/** Text Render Component */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Selector, meta = (AllowPrivateAccess = "true"))
 		class UTextRenderComponent* TextRenderComponent;
 
-	// TODO: Set these up again
+protected:
 	/** Motion controller (right hand) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 		class UMotionControllerComponent* R_MotionController;
@@ -44,9 +48,41 @@ class ANetworkCharacter : public ACharacter {
 public:
 	ANetworkCharacter();
 
+	/** A customization string from Unreal Selector, should match options there */
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = PlayerInfo)
+		int info;
+
+	/** The rank of the user as a string, used to find if the user can do privileged operations */
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = PlayerInfo)
+		FString rank;
+
+	/** The users username from Unreal Selector */
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = PlayerInfo)
+		FString username;
+
+	/** If the user is an admin or not */
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = PlayerInfo)
+		bool isAdmin;
+
+	void InfoResponce(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	
 protected:
 	virtual void BeginPlay();
+	
+	/** Ask Unreal Selector for information about the player, `UponInfoChanged()` is the callback function */
+	UFUNCTION(BlueprintCallable, Category = "Character")
+		void RequestInfo();
 
+	/** Callback function for `RequestInfo()` */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Character")
+		void UponInfoChanged();
+
+	/** Sets internal variables & calls ServerChange */
+	void Change(FInfoStruct_Responce responce);
+	
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerChange(FInfoStruct_Responce responce);
+	
 public:
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)

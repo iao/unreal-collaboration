@@ -1,6 +1,7 @@
 // By Paul Graham <p@ul.ms>
 
 #include "HTTPService.h"
+#include "NetworkCharacter.h"
 #include "GameFramework/Actor.h"
 
 // Sets default values
@@ -78,12 +79,12 @@ void AHTTPService::KeepAlive(FString URL, FKeepAliveStruct keepalive, ANetworkPl
 	Send(Request);
 }
 
-void AHTTPService::Info(FString URL, FInfoStruct_Request info, ANetworkPlayerController* controller) {
+void AHTTPService::Info(FString URL, FInfoStruct_Request info, ANetworkCharacter* character) {
 	FString ContentJsonString;
 	GetJsonStringFromStruct<FInfoStruct_Request>(info, ContentJsonString);
 
 	TSharedRef<IHttpRequest> Request = PostRequest(URL, ContentJsonString);
-	Request->OnProcessRequestComplete().BindUObject(controller, &ANetworkPlayerController::InfoResponce);
+	Request->OnProcessRequestComplete().BindUObject(character, &ANetworkCharacter::InfoResponce);
 	Send(Request);
 }
 

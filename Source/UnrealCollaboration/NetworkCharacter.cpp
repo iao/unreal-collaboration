@@ -12,14 +12,16 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Net/UnrealNetwork.h"
+#include "HTTPService.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
 ANetworkCharacter::ANetworkCharacter() {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.0f, 96.0f);
-	if (IsRunningClientOnly()) GetCapsuleComponent()->SetHiddenInGame(false, true);
-	else GetCapsuleComponent()->SetHiddenInGame(true, true);
+	GetCapsuleComponent()->SetHiddenInGame(true, true);
+	GetCapsuleComponent()->SetIsReplicated(true);
 
 	// set our turn rates for input
 	BaseTurnRate = 45.f;
@@ -42,16 +44,18 @@ ANetworkCharacter::ANetworkCharacter() {
 	// Create a mesh component that will be used when being viewed from a '3rd person' view (when not controlling this pawn)
 	Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh3P"));
 	Mesh3P->SetupAttachment(FirstPersonCameraComponent);
+	Mesh3P->SetRelativeRotation(FRotator(0.0f, 270.0f, 0.0f));
+	Mesh3P->SetRelativeLocation(FVector(40.0f, 0.0f, -155.7f)); // Position the mesh so that it aligns with the capsule
 
 	// Setup BoxComponent
 	BoxComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComponent"));
 	BoxComponent->SetupAttachment(GetCapsuleComponent());
-	BoxComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 90.0f)); // Position the box
+	BoxComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 100.0f)); // Position the box
+	BoxComponent->SetBoxExtent(FVector(10.0f, 10.0f, 10.0f));
 	BoxComponent->SetIsReplicated(true);
 
 	// Setup TextRenderActor
 	// TODO: New users are not given correct name
-	// TODO: Get Mesh3P to work
 	// TODO: VR Support fully :)
 	// TODO: Fix /keepalive in the player controller
 	TextRenderComponent = CreateDefaultSubobject<UTextRenderComponent>(TEXT("TextRenderComponent"));
@@ -84,25 +88,78 @@ void ANetworkCharacter::BeginPlay() {
 	}
 
 	// Show or hide the the mesh based on whether or not we're using motion controllers.
-	//Mesh1P->SetHiddenInGame(bUsingMotionControllers, true);
+	Mesh1P->SetHiddenInGame(bUsingMotionControllers, true);
+	
+	// Request info from Unreal Selector
+	RequestInfo();
+}
+
+// Allow blueprints to ask for player info
+void ANetworkCharacter::RequestInfo() {
+	if (GetLocalRole() != ROLE_Authority) {
+		FInfoStruct_Request info_r;
+		info_r.session = AHTTPService::GetInfoJSON().session;
+		FString URL = AHTTPService::GetInfoJSON().url + "/api/account/info";
+
+		if (info_r.session != "" && URL != "") {
+			AHTTPService::Info(URL, info_r, this);
+		}
+	}
+}
+
+// Update the info variable from the request
+void ANetworkCharacter::InfoResponce(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
+	if (!AHTTPService::ResponseIsValid(Response, bWasSuccessful)) {
+		UE_LOG(LogTemp, Warning, TEXT("Failed to get info! Setting defaults."));
+
+		// Send response to myself & the server
+		FInfoStruct_Responce responce;
+		responce.username = "user";
+		responce.rank = "user";
+		responce.info = 1;
+		responce.isAdmin = false;
+		Change(responce);
+		return;
+	}
+
+	// Send response to myself & the server
+	FInfoStruct_Responce responce;
+	FJsonObjectConverter::JsonObjectStringToUStruct<FInfoStruct_Responce>(Response->GetContentAsString(), &responce, 0, 0);
+	Change(responce);
+}
+
+// Client-side change function
+void ANetworkCharacter::Change(FInfoStruct_Responce responce) {
+	// Set variables on client
+	username = responce.username;
+	info = responce.info;
+	rank = responce.rank;
+	isAdmin = responce.isAdmin;
+
+	// Let Blueprint know, then update the server
+	UponInfoChanged();
+	ServerChange(responce);
+}
+
+// Server side change function
+void ANetworkCharacter::ServerChange_Implementation(FInfoStruct_Responce responce) {
+	// Set variables on server
+	username = responce.username;
+	info = responce.info;
+	rank = responce.rank;
+	isAdmin = responce.isAdmin;
+}
+
+// Validation functions
+bool ANetworkCharacter::ServerChange_Validate(FInfoStruct_Responce responce) {
+	return true;
 }
 
 void ANetworkCharacter::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
 
 	// Set the text to the controllers text
-	if (GetLocalRole() != ROLE_Authority) {
-		ANetworkPlayerController* controller = Cast<ANetworkPlayerController>(GetWorld()->GetFirstPlayerController());
-		if (TextRenderComponent && controller) TextRenderComponent->SetText(FText::FromString(controller->username));
-	}
-	
-	// Replicate the pitch of the camera
-	if (!IsLocallyControlled()) {
-		FRotator NewRot = FirstPersonCameraComponent->GetRelativeRotation();
-		NewRot.Pitch = RemoteViewPitch * 360.0f / 255.0f;
-
-		FirstPersonCameraComponent->SetRelativeRotation(NewRot);
-	}
+	if (TextRenderComponent) TextRenderComponent->SetText(FText::FromString(username));
 
 	// Face name toward player
 	if(HasActiveCameraComponent()) {
@@ -180,4 +237,14 @@ void ANetworkCharacter::LookUpAtRate(float Rate) {
 
 void ANetworkCharacter::OnResetVR() {
 	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
+}
+
+// Replication of info, rank, user
+void ANetworkCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ANetworkCharacter, info);
+	DOREPLIFETIME(ANetworkCharacter, rank);
+	DOREPLIFETIME(ANetworkCharacter, username);
+	DOREPLIFETIME(ANetworkCharacter, isAdmin);
 }

@@ -38,6 +38,6 @@ public:
 	virtual void BeginPlay() override;
 
 	static void KeepAlive(FString URL, FKeepAliveStruct keepalive, ANetworkPlayerController* controller);
-	static void Info(FString URL, FInfoStruct_Request info, ANetworkPlayerController* controller);
+	static void Info(FString URL, FInfoStruct_Request info, class ANetworkCharacter* character);
 	static void Time(FString URL, FTimeStruct_Request time, ANetworkPlayerController* controller);
 };

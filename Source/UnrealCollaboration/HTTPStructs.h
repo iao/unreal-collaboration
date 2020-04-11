@@ -56,6 +56,7 @@ struct FInfoStruct_Responce {
 		UPROPERTY() FString username;
 	UPROPERTY() int info;
 	UPROPERTY() FString rank;
+	UPROPERTY() bool isAdmin;
 
 	FInfoStruct_Responce() {}
 };
