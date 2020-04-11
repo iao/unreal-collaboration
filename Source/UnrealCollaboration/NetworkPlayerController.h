@@ -20,7 +20,7 @@ class UNREALCOLLABORATION_API ANetworkPlayerController : public APlayerControlle
 protected:
 	long int counter, counter_max, random_num;
 	ASignPawn* ThePawn;
-
+	
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_Pawn)
 		bool isPawn;
 
@@ -37,6 +37,9 @@ protected:
 		float FindDistance;
 
 public:
+	UPROPERTY(Replicated, Transient)
+		bool isAdmin;
+	
 	UPROPERTY(EditAnywhere)
 		bool isHidden;
 

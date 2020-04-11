@@ -1,36 +1,33 @@
 # Unreal Collaboration
 Demonetisation of networking components for Unreal project.
 
-### How does this work?
-Starting from the fist person example which can be generated from Unreal, we have allowed multiplayer interaction through the use of **Replication**. 
+### What's This?
+This project demonstrates the features of **Unreal Collaboration** on top of Unreal's first person example project. 
 
-Unreal uses an **authoritative server** model, this is a model in which the server controls the definitive state of the world, and clients send updates to their world to the server which will update all other clients of this. Unreal uses **Replication** to state that an object will be replicated to clients.
-
-In this project, we demonstrate replication for many components. For example, the ball the player shoots in `NetworkingTestCharacter.cpp`. We see that `onFire()` is called when the player hits the mouse button, however this doesn't directly spawn the projectile instead calls `ServerFire()` to spawn it. The function `ServerFire()` is only ran on the server because of the `UFUNCTION(Server, Reliable, WithValidation)` macro we find in `NetworkingTestCharacter.h`. This macro states that this function will only be ran on the server, **will** get called when a client says it should (uses TCP) & it is validated to ensure the client isn't cheating. We also see replication in `NetworkingTestProjectile.cpp`, here the projectile will only be destroyed by the server so that clients all have the same projectiles visible at once.
-
-For deployment, we are expecting clients to download their executable from [Unreal Selector](https://gitlab.donald108.com/university/unreal-selector) & have dedicated servers available for clients to connect to and explore together (see **build**).
+For deployment, we clients will download their executable from [Unreal Selector](https://gitlab.donald108.com/university/unreal-selector) & a dedicated servers will be available for clients to connect to and explore together (see **Build**).
 The server is therefore a dedicated server which will run in a Linux environment, and the clients will be built for several platforms. 
 
-To build the project, if you are planning on cross-compiling to Linux [install Unreal from source](https://docs.unrealengine.com/en-US/GettingStarted/DownloadingUnrealEngine/index.html), and generate the project files. Then build both a packaged version of the client from within the editor target, and build the server directly with the server target.
+To build the project, if you are planning on cross-compiling to Linux [install Unreal from source](https://docs.unrealengine.com/en-US/GettingStarted/DownloadingUnrealEngine/index.html), and generate the project files.
 
 ### Build
-To build a server built off of this project, please do the following:
+To build an **Unreal Collaboration** server, please do the following:
 1. First setup the project for packaging
-    * *Entry* and *Transation* levels must be added, and maps must be selected to be cooked
+    * Setup the Gamemode to use your Blueprinted extensions of the following: `NetworkCharacter` as the default pawn, `NetworkPlayerController` as the default Player Controller, and `NetworkHUD` as the default HUD
+    * Setup the *Entry* level to use `NetworkStartScriptActor` as it's parent class
+    * *Entry* and *Transation* levels must be added. All maps must be selected to be cooked
     * Everything should be setup to allow for cooking (for example, one should not be referening `UBlueprint` within code as these are not explicitly packaged (only the generared code is) and instead should use Blueprints to select the Blueprint to use)
-2. Once the project is setup for packaging, follow the instructions for deployment on Windows or Linux
+2. Once the project is setup for packaging, follow the instructions for deployment using [Unreal Selector](https://gitlab.donald108.com/university/unreal-selector) on Windows or Linux below
 
-#### Linux
-1. [Get the source for unreal engine](https://www.unrealengine.com/en-US/ue4-on-github)
-2. Set the project to use the source build of Unreal
-3. Make Blueprints from the classes available in Unreal Colloboartion.
-4. Compile & run the project
-5. Package the project for **BOTH** Linux and Windows, save in a known location
-6. Back in the project solution, select `Development Server` as the target and `Linux` as the architecture and build
-7. Copy the build project (`TODO:PATH`) to where you saved the packaged build (`/Packaged/Binaries/Linux/`)
-8. Copy the packaged project to the deployment server
-9. Setup execute permissions of the server
-10. Run the server, and connect from your client
+#### Client
+1. Compile & run the project using the `Development Editor` build
+2. Package the project for the target client architecture(s), save in a known location (e.g. `Build`) using File -> Package Project in the editor
+3. Move the *contents* of `Build/${OS_NAME}NoEditor/` to its own folder (***the name of this folder should be the name of the final project***), which can be used for server distrubution.
 
-#### Windows
-**Currently not supported**
+#### Server
+1. Compile & run the project using the `Development Editor` build
+2. Package the project for the target server architecture, save in a known location (e.g. `Build`) using File -> Package Project in the editor
+3. Back in the project solution, select `Development Server`
+4. Right click on the solution, and click Build
+5. Setup execute permissions of the server in `Binaries/${OS_NAME}/${PROJECT_NAME}Server`
+6. Move the built server executable from `Binaries/${OS_NAME}/${PROJECT_NAME}Server` to `Build/${OS_NAME}NoEditor/${UNREAL_PROJECT_NAME}/Binaries/${OS_NAME}/`
+7. Move the *contents* of `Build/${OS_NAME}NoEditor/` to its own folder (***the name of this folder should be the name of the final project***), which can be used for client distrubution (by zipping it).

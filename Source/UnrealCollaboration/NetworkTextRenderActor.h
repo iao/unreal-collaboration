@@ -18,9 +18,15 @@ public:
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_Text)
 		FText text;
 
+	UPROPERTY(BlueprintReadWrite, Transient, ReplicatedUsing = OnRep_TextColor, Category = TextProp)
+		FColor textColor;
+
 	ANetworkTextRenderActor();
 
 	UFUNCTION()
 		void OnRep_Text();
+
+	UFUNCTION()
+		void OnRep_TextColor();
 
 };

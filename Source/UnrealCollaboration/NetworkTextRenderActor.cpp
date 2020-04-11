@@ -6,6 +6,7 @@
 // Make the object
 ANetworkTextRenderActor::ANetworkTextRenderActor() {
 	GetTextRender()->SetHorizontalAlignment(EHTA_Center);
+	GetTextRender()->SetIsReplicated(true);
 	SetReplicates(true);
 	SetReplicateMovement(true);
 }
@@ -13,6 +14,11 @@ ANetworkTextRenderActor::ANetworkTextRenderActor() {
 // Called whenever text is replicated
 void ANetworkTextRenderActor::OnRep_Text() {
 	GetTextRender()->SetText(text);
+}
+
+// Called when text color is replicated
+void ANetworkTextRenderActor::OnRep_TextColor() {
+	GetTextRender()->SetTextRenderColor(textColor);
 }
 
 // Called to disable the actor from the client
@@ -26,4 +32,5 @@ void ANetworkTextRenderActor::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 
 	// Tell the engine to call the OnRep_Text each time text changes
 	DOREPLIFETIME(ANetworkTextRenderActor, text);
+	DOREPLIFETIME(ANetworkTextRenderActor, textColor);
 }

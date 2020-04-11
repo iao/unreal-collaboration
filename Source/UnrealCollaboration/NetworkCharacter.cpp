@@ -57,7 +57,6 @@ ANetworkCharacter::ANetworkCharacter() {
 	BoxComponent->SetBoxExtent(FVector(10.0f, 10.0f, 10.0f));
 	BoxComponent->SetIsReplicated(true);
 
-	// TODO: New users are not given correct name
 	// TODO: VR Support fully :)
 	// TODO: Fix /keepalive in the player controller
 	
@@ -153,10 +152,14 @@ void ANetworkCharacter::ServerChange_Implementation(FInfoStruct_Responce responc
 	rank = responce.rank;
 	isAdmin = responce.isAdmin;
 
-	// Call upon info changed
+	// Update the controller
+	ANetworkPlayerController* controller = Cast<ANetworkPlayerController>(GetController());
+	if (controller) controller->isAdmin = isAdmin;
+
+	// Call info changed for that user
 	UponInfoChanged();
 	
-	// Update the name
+	// Update our name
 	TextActor->text = FText::FromString(username);
 }
 
@@ -174,7 +177,7 @@ void ANetworkCharacter::Tick(float DeltaTime) {
 	}
 	
 	// Have the text actor rotate with the player
-	if(HasActiveCameraComponent() && TextActor) {
+	if(HasActiveCameraComponent() && TextActor && GetWorld()->GetFirstPlayerController()) {
 		FVector PlayerLocation = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->GetCameraLocation();
 		FRotator TextRotationAll = UKismetMathLibrary::FindLookAtRotation(PlayerLocation, TextActor->GetActorLocation());
 		FRotator TextRotation = FRotator(TextActor->GetActorRotation().Pitch, 180 + TextRotationAll.Yaw, TextRotationAll.Roll);

@@ -52,12 +52,7 @@ void ANetworkPlayerController::TimeResponce(FHttpRequestPtr Request, FHttpRespon
 
 // Check if the player matches the admin rank
 bool ANetworkPlayerController::HasSelectorAuthority() {
-	// Get a reference to the current actor
-	ANetworkCharacter* Actor = Cast<ANetworkCharacter>(GetPawnOrSpectator());
-
-	// Check if they are admin
-	if (Actor) return Actor->isAdmin;
-	else return false;
+	return isAdmin;
 }
 
 // Setup inputs for the controller
@@ -94,11 +89,11 @@ void ANetworkPlayerController::Tick(float DeltaTime) {
 			if (keepalive.session != "" && keepalive.title != "" && URL != "") {
 				AHTTPService::KeepAlive(URL, keepalive, this);
 			}
-
-			// Hide our text actor
-			ANetworkCharacter* Actor = Cast<ANetworkCharacter>(GetPawnOrSpectator());
-			if (Actor && Actor->TextActor) Actor->TextActor->HideActor(true);
 		}
+
+		// Hide our text actor
+		ANetworkCharacter* Actor = Cast<ANetworkCharacter>(GetPawnOrSpectator());
+		if (Actor && Actor->TextActor) Actor->TextActor->HideActor(true);
 	}
 }
 
@@ -203,7 +198,7 @@ bool ANetworkPlayerController::ServerSpawn_Validate() {
 }
 
 bool ANetworkPlayerController::ServerDelete_Validate() {
-	return true;
+	return isAdmin;
 }
 
 // Called when isPawn replicates
@@ -216,4 +211,5 @@ void ANetworkPlayerController::OnRep_Pawn() {
 void ANetworkPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ANetworkPlayerController, isPawn);
+	DOREPLIFETIME(ANetworkPlayerController, isAdmin);
 }
