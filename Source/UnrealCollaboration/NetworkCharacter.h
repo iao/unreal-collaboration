@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "HTTPStructs.h"
 #include "Runtime/Online/HTTP/Public/Http.h"
+#include "NetworkTextRenderActor.h"
 #include "NetworkCharacter.generated.h"
 
 struct FInfoStruct_Responce;
@@ -30,12 +31,7 @@ class ANetworkCharacter : public ACharacter {
 	/** The box where the text render component is attached to */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class UBoxComponent* BoxComponent;
-
-public:
-	/** Text Render Component */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Selector, meta = (AllowPrivateAccess = "true"))
-		class UTextRenderComponent* TextRenderComponent;
-
+	
 protected:
 	/** Motion controller (right hand) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
@@ -46,22 +42,47 @@ protected:
 		class UMotionControllerComponent* L_MotionController;
 
 public:
-	ANetworkCharacter();
+	UPROPERTY(Replicated, BlueprintReadWrite, Category = PlayerInfo)
+		ANetworkTextRenderActor* TextActor;
 
-	/** A customization string from Unreal Selector, should match options there */
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = PlayerInfo)
+protected:
+	/** The Actor to be spawned for the users text */
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = SpawnInfo)
+		TSubclassOf<ANetworkTextRenderActor> TextActorClass;
+	
+	/** A default customization int from Unreal Selector */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInfo)
+		int DefaultInfo;
+
+	/** The default rank of the user as a string, used to find if the user can do privileged operations */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInfo)
+		FString DefaultRank;
+
+	/** The default users username from Unreal Selector */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInfo)
+		FString DefaultUsername;
+
+	/** If the user is an admin or not by default */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInfo)
+		bool isAdminByDefault;
+	
+public:
+	ANetworkCharacter();
+	
+	/** A customization int from Unreal Selector, should match options there */
+	UPROPERTY(Replicated, BlueprintReadWrite, Category = PlayerInfo)
 		int info;
 
 	/** The rank of the user as a string, used to find if the user can do privileged operations */
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = PlayerInfo)
+	UPROPERTY(Replicated, BlueprintReadWrite, Category = PlayerInfo)
 		FString rank;
 
 	/** The users username from Unreal Selector */
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = PlayerInfo)
+	UPROPERTY(Replicated, BlueprintReadWrite, Category = PlayerInfo)
 		FString username;
 
 	/** If the user is an admin or not */
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = PlayerInfo)
+	UPROPERTY(Replicated, BlueprintReadWrite, Category = PlayerInfo)
 		bool isAdmin;
 
 	void InfoResponce(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);

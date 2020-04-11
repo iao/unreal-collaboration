@@ -94,6 +94,10 @@ void ANetworkPlayerController::Tick(float DeltaTime) {
 			if (keepalive.session != "" && keepalive.title != "" && URL != "") {
 				AHTTPService::KeepAlive(URL, keepalive, this);
 			}
+
+			// Hide our text actor
+			ANetworkCharacter* Actor = Cast<ANetworkCharacter>(GetPawnOrSpectator());
+			if (Actor && Actor->TextActor) Actor->TextActor->HideActor(true);
 		}
 	}
 }

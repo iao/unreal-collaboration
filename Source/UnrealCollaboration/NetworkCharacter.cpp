@@ -18,6 +18,9 @@
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
 ANetworkCharacter::ANetworkCharacter() {
+	// Setup Defaults
+	if (!TextActorClass) TextActorClass = ANetworkTextRenderActor::StaticClass();
+	
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.0f, 96.0f);
 	GetCapsuleComponent()->SetHiddenInGame(true, true);
@@ -54,15 +57,10 @@ ANetworkCharacter::ANetworkCharacter() {
 	BoxComponent->SetBoxExtent(FVector(10.0f, 10.0f, 10.0f));
 	BoxComponent->SetIsReplicated(true);
 
-	// Setup TextRenderActor
 	// TODO: New users are not given correct name
 	// TODO: VR Support fully :)
 	// TODO: Fix /keepalive in the player controller
-	TextRenderComponent = CreateDefaultSubobject<UTextRenderComponent>(TEXT("TextRenderComponent"));
-	TextRenderComponent->SetupAttachment(BoxComponent);
-	TextRenderComponent->SetIsReplicated(true);
-	TextRenderComponent->SetHorizontalAlignment(EHTA_Center);
-
+	
 	// Allow ticks
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -76,17 +74,15 @@ void ANetworkCharacter::BeginPlay() {
 	// Call the base class  
 	Super::BeginPlay();
 
-	// Show or hide meshes based on if we are locally controlling the character
-	if (IsLocallyControlled()) {
-		if(TextRenderComponent) TextRenderComponent->SetVisibility(false);
-		if(Mesh3P) Mesh3P->SetVisibility(false);
-		if(Mesh1P) Mesh1P->SetVisibility(true);
-	} else {
-		if (TextRenderComponent) TextRenderComponent->SetVisibility(true);
-		if (Mesh3P) Mesh3P->SetVisibility(true);
-		if (Mesh1P) Mesh1P->SetVisibility(false);
+	// Spawn the text actor
+	if (GetLocalRole() == ROLE_Authority) {
+		TextActor = GetWorld()->SpawnActor<ANetworkTextRenderActor>(TextActorClass->GetAuthoritativeClass(), BoxComponent->GetComponentLocation(), BoxComponent->GetComponentRotation());
 	}
-
+	
+	// Show or hide meshes based on if we are locally controlling the character
+	Mesh3P->SetVisibility(!IsLocallyControlled());
+	Mesh1P->SetVisibility(IsLocallyControlled());
+		
 	// Show or hide the the mesh based on whether or not we're using motion controllers.
 	Mesh1P->SetHiddenInGame(bUsingMotionControllers, true);
 	
@@ -103,6 +99,15 @@ void ANetworkCharacter::RequestInfo() {
 
 		if (info_r.session != "" && URL != "") {
 			AHTTPService::Info(URL, info_r, this);
+		} else {
+			UE_LOG(LogTemp, Warning, TEXT("Failed to get info.json! Setting defaults."));
+			
+			FInfoStruct_Responce responce;
+			responce.username = DefaultUsername;
+			responce.rank = DefaultRank;
+			responce.info = DefaultInfo;
+			responce.isAdmin = isAdminByDefault;
+			Change(responce);
 		}
 	}
 }
@@ -114,10 +119,10 @@ void ANetworkCharacter::InfoResponce(FHttpRequestPtr Request, FHttpResponsePtr R
 
 		// Send response to myself & the server
 		FInfoStruct_Responce responce;
-		responce.username = "user";
-		responce.rank = "user";
-		responce.info = 1;
-		responce.isAdmin = false;
+		responce.username = DefaultUsername;
+		responce.rank = DefaultRank;
+		responce.info = DefaultInfo;
+		responce.isAdmin = isAdminByDefault;
 		Change(responce);
 		return;
 	}
@@ -137,7 +142,6 @@ void ANetworkCharacter::Change(FInfoStruct_Responce responce) {
 	isAdmin = responce.isAdmin;
 
 	// Let Blueprint know, then update the server
-	UponInfoChanged();
 	ServerChange(responce);
 }
 
@@ -148,6 +152,12 @@ void ANetworkCharacter::ServerChange_Implementation(FInfoStruct_Responce responc
 	info = responce.info;
 	rank = responce.rank;
 	isAdmin = responce.isAdmin;
+
+	// Call upon info changed
+	UponInfoChanged();
+	
+	// Update the name
+	TextActor->text = FText::FromString(username);
 }
 
 // Validation functions
@@ -158,15 +168,17 @@ bool ANetworkCharacter::ServerChange_Validate(FInfoStruct_Responce responce) {
 void ANetworkCharacter::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
 
-	// Set the text to the controllers text
-	if (TextRenderComponent) TextRenderComponent->SetText(FText::FromString(username));
-
-	// Face name toward player
-	if(HasActiveCameraComponent()) {
+	// Have the text actor follow the player
+	if (GetLocalRole() == ROLE_Authority) {
+		TextActor->SetActorLocation(GetActorLocation() + BoxComponent->GetRelativeLocation());
+	}
+	
+	// Have the text actor rotate with the player
+	if(HasActiveCameraComponent() && TextActor) {
 		FVector PlayerLocation = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->GetCameraLocation();
-		FRotator NewRotationAll = UKismetMathLibrary::FindLookAtRotation(PlayerLocation, GetActorLocation());
-		FRotator NewRotation = FRotator(GetActorRotation().Pitch, 180 + NewRotationAll.Yaw, NewRotationAll.Roll);
-		if (TextRenderComponent) TextRenderComponent->SetWorldRotation(NewRotation);
+		FRotator TextRotationAll = UKismetMathLibrary::FindLookAtRotation(PlayerLocation, TextActor->GetActorLocation());
+		FRotator TextRotation = FRotator(TextActor->GetActorRotation().Pitch, 180 + TextRotationAll.Yaw, TextRotationAll.Roll);
+		TextActor->SetActorRotation(TextRotation);
 	}
 
 	// Slow down when not jumping
@@ -243,6 +255,7 @@ void ANetworkCharacter::OnResetVR() {
 void ANetworkCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	DOREPLIFETIME(ANetworkCharacter, TextActor);
 	DOREPLIFETIME(ANetworkCharacter, info);
 	DOREPLIFETIME(ANetworkCharacter, rank);
 	DOREPLIFETIME(ANetworkCharacter, username);

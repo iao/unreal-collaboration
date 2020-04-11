@@ -7,6 +7,7 @@
 ANetworkTextRenderActor::ANetworkTextRenderActor() {
 	GetTextRender()->SetHorizontalAlignment(EHTA_Center);
 	SetReplicates(true);
+	SetReplicateMovement(true);
 }
 
 // Called whenever text is replicated
