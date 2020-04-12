@@ -9,7 +9,7 @@
 #include "NetworkTextRenderActor.h"
 #include "NetworkCharacter.generated.h"
 
-struct FInfoStruct_Responce;
+struct FInfoStruct_Response;
 class UInputComponent;
 
 UCLASS(config = Game)
@@ -31,17 +31,18 @@ class ANetworkCharacter : public ACharacter {
 	/** The box where the text render component is attached to */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class UBoxComponent* BoxComponent;
-	
+
 protected:
 	/** Motion controller (right hand) */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = VR, meta = (AllowPrivateAccess = "true"))
 		class UMotionControllerComponent* R_MotionController;
 
 	/** Motion controller (left hand) */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = VR, meta = (AllowPrivateAccess = "true"))
 		class UMotionControllerComponent* L_MotionController;
 
 public:
+	/** The actor which will display the username of the user */
 	UPROPERTY(Replicated, BlueprintReadWrite, Category = PlayerInfo)
 		ANetworkTextRenderActor* TextActor;
 
@@ -49,10 +50,22 @@ protected:
 	/** The Actor to be spawned for the users text */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = SpawnInfo)
 		TSubclassOf<ANetworkTextRenderActor> TextActorClass;
+
+	/** Maximum absolute speed in XY */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = VRMovement)
+		float XYMaxSpeed = 500.f;
+
+	/** Maximum absolute speed in Z */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = VRMovement)
+		float ZMaxSpeed = 1000.f;
+
+	/** Launch speed for the player */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = VRMovement)
+		float LaunchSpeed = 100.f;
 	
 	/** A default customization int from Unreal Selector */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInfo)
-		int DefaultInfo;
+		int DefaultInfo = 1;
 
 	/** The default rank of the user as a string, used to find if the user can do privileged operations */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInfo)
@@ -67,7 +80,12 @@ protected:
 		bool isAdminByDefault;
 	
 public:
+	/** Constructor */
 	ANetworkCharacter();
+
+	/** Gets if the player is in VR or not */
+	UFUNCTION(BlueprintCallable, Category = VR)
+		bool isInVR();
 	
 	/** A customization int from Unreal Selector, should match options there */
 	UPROPERTY(Replicated, BlueprintReadWrite, Category = PlayerInfo)
@@ -85,9 +103,11 @@ public:
 	UPROPERTY(Replicated, BlueprintReadWrite, Category = PlayerInfo)
 		bool isAdmin;
 
-	void InfoResponce(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	/** Deals with responses from unreal selector */
+	void InfoResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 	
 protected:
+	/** Begins play for this actor */
 	virtual void BeginPlay();
 	
 	/** Ask Unreal Selector for information about the player, `UponInfoChanged()` is the callback function */
@@ -99,24 +119,13 @@ protected:
 		void UponInfoChanged();
 
 	/** Sets internal variables & calls ServerChange */
-	void Change(FInfoStruct_Responce responce);
-	
+	void Change(FInfoStruct_Response responce);
+
+	/** Sets internal variables on the server */
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerChange(FInfoStruct_Responce responce);
+		void ServerChange(FInfoStruct_Response responce);
 	
 public:
-	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
-		float BaseTurnRate;
-
-	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
-		float BaseLookUpRate;
-
-	/** Whether to use motion controller location for aiming. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		uint32 bUsingMotionControllers : 1;
-
 	/** Allow the player to always jump */
 	virtual bool CanJumpInternal_Implementation() const override;
 
@@ -130,8 +139,15 @@ protected:
 	/** Resets HMD orientation and position in VR. */
 	void OnResetVR();
 
-	/* Handles moving vertically */
-	void MoveUp(float Value);
+	/* Handles moving in VR */
+	UFUNCTION(Server, Reliable, WithValidation)
+		void MoveVR(float Value);
+	
+	/* Handles turning left VR */
+	void TurnLeft();
+
+	/* Handles turning right VR */
+	void TurnRight();
 
 	/** Handles moving forward/backward */
 	void MoveForward(float Value);
@@ -139,21 +155,8 @@ protected:
 	/** Handles stafing movement, left and right */
 	void MoveRight(float Value);
 
-	/**
-	 * Called via input to turn at a given rate.
-	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
-	 */
-	void TurnAtRate(float Rate);
-
-	/**
-	 * Called via input to turn look up/down at a given rate.
-	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
-	 */
-	void LookUpAtRate(float Rate);
-
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
-	// End of APawn interface
 
 public:
 	/** Returns Mesh1P subobject **/

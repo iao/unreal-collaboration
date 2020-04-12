@@ -3,5 +3,6 @@
 #include "UnrealCollaboration.h"
 #include "Modules/ModuleManager.h"
 
+// Project specific - not part of Unreal Collaboration
 IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, UnrealCollaboration, "UnrealCollaboration" );
  

@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "HTTPStructs.generated.h"
 
+/** Info.json struct */
 USTRUCT()
 struct FInfoJSONStruct {
 	GENERATED_BODY()
@@ -17,6 +18,7 @@ struct FInfoJSONStruct {
 	FInfoJSONStruct() {}
 };
 
+/** Keepalive request struct */
 USTRUCT()
 struct FKeepAliveStruct {
 	GENERATED_BODY()
@@ -26,6 +28,7 @@ struct FKeepAliveStruct {
 	FKeepAliveStruct() {}
 };
 
+/** Time request struct */
 USTRUCT()
 struct FTimeStruct_Request {
 	GENERATED_BODY()
@@ -34,14 +37,16 @@ struct FTimeStruct_Request {
 	FTimeStruct_Request() {}
 };
 
+/** Time response struct */
 USTRUCT()
-struct FTimeStruct_Responce {
+struct FTimeStruct_Response {
 	GENERATED_BODY()
 		UPROPERTY() int time;
 
-	FTimeStruct_Responce() {}
+	FTimeStruct_Response() {}
 };
 
+/** Info request struct */
 USTRUCT()
 struct FInfoStruct_Request {
 	GENERATED_BODY()
@@ -50,15 +55,16 @@ struct FInfoStruct_Request {
 	FInfoStruct_Request() {}
 };
 
+/**Indo response struct */
 USTRUCT()
-struct FInfoStruct_Responce {
+struct FInfoStruct_Response {
 	GENERATED_BODY()
 		UPROPERTY() FString username;
 	UPROPERTY() int info;
 	UPROPERTY() FString rank;
 	UPROPERTY() bool isAdmin;
 
-	FInfoStruct_Responce() {}
+	FInfoStruct_Response() {}
 };
 
 UCLASS()
@@ -66,14 +72,15 @@ class UNREALCOLLABORATION_API AHTTPStructs : public AActor {
 	GENERATED_BODY()
 
 public:
+	/** Constructor */
 	AHTTPStructs();
 
 protected:
-	// Called when the game starts or when spawned
+	/** Called when the game starts or when spawned */
 	virtual void BeginPlay() override;
 
 public:
-	// Called every frame
+	/** Called every frame */
 	virtual void Tick(float DeltaTime) override;
 
 };

@@ -18,10 +18,16 @@ class UNREALCOLLABORATION_API ANetworkPlayerController : public APlayerControlle
 	GENERATED_BODY()
 
 protected:
+	/** The timer, calling /keepalive to keep the server alive */
 	FTimerHandle KeepAliveTimer;
+
+	/** Variables for KeepAliveTimer */
 	long int counter_max, random_num;
+
+	/** The sign pawn, which we can possess */
 	ASignPawn* ThePawn;
-	
+
+	/** If we are currently possessing a sign or not */
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_Pawn)
 		bool isPawn;
 
@@ -38,14 +44,19 @@ protected:
 		float FindDistance;
 
 public:
+	/** If the player is an admin */
 	UPROPERTY(Replicated, Transient)
 		bool isAdmin;
-	
+
+	/** If the player has chosen to hide signs in the world */
 	UPROPERTY(EditAnywhere)
 		bool isHidden;
 
-	void KeepAliveResponce(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
-	void TimeResponce(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+	/** Called when /keepalive responds */
+	void KeepAliveResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
+
+	/** Called when /time responds */
+	void TimeResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful);
 
 	/** Simple function checking if the rank is suitable for administrative controls */
 	UFUNCTION(BlueprintCallable, Category = "Character")
@@ -55,18 +66,31 @@ public:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 	virtual void Tick(float DeltaTime) override;
+
+	/** Send a keepalive request */
 	void KeepAlive();
+
+	/** Client side spawn function */
 	void Spawn();
+
+	/** Toggle hiding the signs on the client */
 	void Hide();
 
+	/** Quit the game */
+	void Quit();
+
+	/** Client side delete function to remove a sign */
 	UFUNCTION()
 		void Delete();
-	
+	 
+	/** Called after isPawn has replicated, ensures new pawns are hidden */
 	void OnRep_Pawn();
-	
+
+	/** Spawn a new sign on the server & possess it */
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerSpawn();
 
+	/** Delete a sign and possess the actor */
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerDelete();
 };

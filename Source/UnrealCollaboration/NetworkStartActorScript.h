@@ -11,5 +11,6 @@ class UNREALCOLLABORATION_API ANetworkStartActorScript : public ALevelScriptActo
 	GENERATED_BODY()
 
 public:
+	/** Open level at on remote server */
 	virtual void BeginPlay() override;
 };

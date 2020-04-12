@@ -16,6 +16,7 @@ ANetworkHUD::ANetworkHUD() {
 void ANetworkHUD::BeginPlay() {
 	Super::BeginPlay();
 
+	// Create the widget and setup options
 	PlayerUI = CreateWidget<USignWidget>(GetOwningPlayerController(), PlayerUIClass->GetAuthoritativeClass());
 	if (PlayerUI) {
 		PlayerUI->Owner = this;
@@ -36,6 +37,7 @@ void ANetworkHUD::SetVisible(bool visible) {
 
 	if (PlayerUI) {
 		PlayerUI->SetVisibility(visability);
+		
 		if (visible) {
 			// Set the text in the box to that of the pawn if it isn't the default text
 			ASignPawn* pawn = Cast<ASignPawn>(GetOwningPawn());

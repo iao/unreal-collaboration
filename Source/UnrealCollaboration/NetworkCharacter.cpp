@@ -6,7 +6,6 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
-#include "Components/TextRenderComponent.h"
 #include "Components/BoxComponent.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "Kismet/GameplayStatics.h"
@@ -14,6 +13,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "HTTPService.h"
+#include "MotionControllerComponent.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 
@@ -25,10 +25,6 @@ ANetworkCharacter::ANetworkCharacter() {
 	GetCapsuleComponent()->InitCapsuleSize(55.0f, 96.0f);
 	GetCapsuleComponent()->SetHiddenInGame(true, true);
 	GetCapsuleComponent()->SetIsReplicated(true);
-
-	// set our turn rates for input
-	BaseTurnRate = 45.f;
-	BaseLookUpRate = 45.f;
 
 	// Create a CameraComponent	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
@@ -57,7 +53,19 @@ ANetworkCharacter::ANetworkCharacter() {
 	BoxComponent->SetBoxExtent(FVector(10.0f, 10.0f, 10.0f));
 	BoxComponent->SetIsReplicated(true);
 
-	// TODO: VR Support fully :)
+	// Setup motion controllers
+	L_MotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("L_MotionController"));
+	L_MotionController->SetupAttachment(FirstPersonCameraComponent);
+	L_MotionController->MotionSource = FName("Left");
+	L_MotionController->bDisplayDeviceModel = true;
+	L_MotionController->SetIsReplicated(true);
+	
+	R_MotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("R_MotionController"));
+	R_MotionController->SetupAttachment(FirstPersonCameraComponent);
+	R_MotionController->MotionSource = FName("Right");
+	R_MotionController->bDisplayDeviceModel = true;
+
+	// TODO: Fix VR Rotation issue
 	// TODO: Comments!!!
 	
 	// Allow ticks
@@ -67,6 +75,12 @@ ANetworkCharacter::ANetworkCharacter() {
 	JumpMaxHoldTime = 100000.0f;
 	GetCharacterMovement()->GravityScale = 0.35f;
 	GetCharacterMovement()->AirControl = 1;
+}
+
+bool ANetworkCharacter::isInVR() {
+	// Return if we are in VR
+	FName HMDName = UHeadMountedDisplayFunctionLibrary::GetHMDDeviceName();
+	return !(HMDName.IsEqual(FName("None")) || HMDName.IsEqual(FName("Unknown")));
 }
 
 void ANetworkCharacter::BeginPlay() {
@@ -82,8 +96,17 @@ void ANetworkCharacter::BeginPlay() {
 	Mesh3P->SetVisibility(!IsLocallyControlled());
 	Mesh1P->SetVisibility(IsLocallyControlled());
 		
-	// Show or hide the the mesh based on whether or not we're using motion controllers.
-	Mesh1P->SetHiddenInGame(bUsingMotionControllers, true);
+	// Allow for free camera movement if we are in VR.
+	if(isInVR()) {
+		// Move the camera to the center so we dont get sick when rotating
+		FirstPersonCameraComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 64.f)); // Position the camera to the center
+		Mesh1P->SetVisibility(false); // Cannot see arms in VR - Only controllers
+		Mesh3P->SetRelativeLocation(FVector(0.44f, -1.75f, -155.7f)); // Move mesh back to same position
+	}
+
+	// Show/hide motion controllers
+	L_MotionController->SetHiddenInGame(isInVR());
+	R_MotionController->SetHiddenInGame(isInVR());
 	
 	// Request info from Unreal Selector
 	RequestInfo();
@@ -92,65 +115,68 @@ void ANetworkCharacter::BeginPlay() {
 // Allow blueprints to ask for player info
 void ANetworkCharacter::RequestInfo() {
 	if (GetLocalRole() != ROLE_Authority) {
+		// Setup the request
 		FInfoStruct_Request info_r;
 		info_r.session = AHTTPService::GetInfoJSON().session;
 		FString URL = AHTTPService::GetInfoJSON().url + "/api/account/info";
 
+		// Deal with not being able to find info.json
 		if (info_r.session != "" && URL != "") {
 			AHTTPService::Info(URL, info_r, this);
 		} else {
+			// If we can't, set values to default
 			UE_LOG(LogTemp, Warning, TEXT("Failed to get info.json! Setting defaults."));
 			
-			FInfoStruct_Responce responce;
-			responce.username = DefaultUsername;
-			responce.rank = DefaultRank;
-			responce.info = DefaultInfo;
-			responce.isAdmin = isAdminByDefault;
-			Change(responce);
+			FInfoStruct_Response response;
+			response.username = DefaultUsername;
+			response.rank = DefaultRank;
+			response.info = DefaultInfo;
+			response.isAdmin = isAdminByDefault;
+			Change(response);
 		}
 	}
 }
 
 // Update the info variable from the request
-void ANetworkCharacter::InfoResponce(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
+void ANetworkCharacter::InfoResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
 	if (!AHTTPService::ResponseIsValid(Response, bWasSuccessful)) {
 		UE_LOG(LogTemp, Warning, TEXT("Failed to get info! Setting defaults."));
 
 		// Send response to myself & the server
-		FInfoStruct_Responce responce;
-		responce.username = DefaultUsername;
-		responce.rank = DefaultRank;
-		responce.info = DefaultInfo;
-		responce.isAdmin = isAdminByDefault;
-		Change(responce);
+		FInfoStruct_Response response;
+		response.username = DefaultUsername;
+		response.rank = DefaultRank;
+		response.info = DefaultInfo;
+		response.isAdmin = isAdminByDefault;
+		Change(response);
 		return;
 	}
 
 	// Send response to myself & the server
-	FInfoStruct_Responce responce;
-	FJsonObjectConverter::JsonObjectStringToUStruct<FInfoStruct_Responce>(Response->GetContentAsString(), &responce, 0, 0);
-	Change(responce);
+	FInfoStruct_Response response;
+	FJsonObjectConverter::JsonObjectStringToUStruct<FInfoStruct_Response>(Response->GetContentAsString(), &response, 0, 0);
+	Change(response);
 }
 
 // Client-side change function
-void ANetworkCharacter::Change(FInfoStruct_Responce responce) {
+void ANetworkCharacter::Change(FInfoStruct_Response response) {
 	// Set variables on client
-	username = responce.username;
-	info = responce.info;
-	rank = responce.rank;
-	isAdmin = responce.isAdmin;
+	username = response.username;
+	info = response.info;
+	rank = response.rank;
+	isAdmin = response.isAdmin;
 
 	// Let Blueprint know, then update the server
-	ServerChange(responce);
+	ServerChange(response);
 }
 
 // Server side change function
-void ANetworkCharacter::ServerChange_Implementation(FInfoStruct_Responce responce) {
+void ANetworkCharacter::ServerChange_Implementation(FInfoStruct_Response response) {
 	// Set variables on server
-	username = responce.username;
-	info = responce.info;
-	rank = responce.rank;
-	isAdmin = responce.isAdmin;
+	username = response.username;
+	info = response.info;
+	rank = response.rank;
+	isAdmin = response.isAdmin;
 
 	// Update the controller
 	ANetworkPlayerController* controller = Cast<ANetworkPlayerController>(GetController());
@@ -164,7 +190,7 @@ void ANetworkCharacter::ServerChange_Implementation(FInfoStruct_Responce responc
 }
 
 // Validation functions
-bool ANetworkCharacter::ServerChange_Validate(FInfoStruct_Responce responce) {
+bool ANetworkCharacter::ServerChange_Validate(FInfoStruct_Response response) {
 	return true;
 }
 
@@ -174,6 +200,28 @@ void ANetworkCharacter::Tick(float DeltaTime) {
 	// Have the text actor follow the player
 	if (GetLocalRole() == ROLE_Authority) {
 		TextActor->SetActorLocation(GetActorLocation() + BoxComponent->GetRelativeLocation());
+
+		// Slow down when not jumping
+		if (!bWasJumping && GetMovementComponent()->Velocity.Z > 1.5f) {
+			GetMovementComponent()->Velocity.Z -= GetMovementComponent()->GetMaxSpeed();
+		}
+
+		// Slow down when moving too fast
+		if (isInVR()) {
+			if (GetMovementComponent()->Velocity.X > XYMaxSpeed) {
+				GetMovementComponent()->Velocity.X = XYMaxSpeed - (XYMaxSpeed / 10);
+			} if (GetMovementComponent()->Velocity.X < -XYMaxSpeed) {
+				GetMovementComponent()->Velocity.X = -XYMaxSpeed + (XYMaxSpeed / 10);
+			} if (GetMovementComponent()->Velocity.Y > XYMaxSpeed) {
+				GetMovementComponent()->Velocity.Y = XYMaxSpeed - (XYMaxSpeed / 10);
+			} if (GetMovementComponent()->Velocity.Y < -XYMaxSpeed) {
+				GetMovementComponent()->Velocity.Y = -XYMaxSpeed + (XYMaxSpeed / 10);
+			} if (GetMovementComponent()->Velocity.Z > ZMaxSpeed) {
+				GetMovementComponent()->Velocity.Z = ZMaxSpeed - (ZMaxSpeed / 10);
+			} if (GetMovementComponent()->Velocity.Z < -ZMaxSpeed) {
+				GetMovementComponent()->Velocity.Z = -ZMaxSpeed + (ZMaxSpeed / 10);
+			}
+		}
 	}
 	
 	// Have the text actor rotate with the player
@@ -182,11 +230,6 @@ void ANetworkCharacter::Tick(float DeltaTime) {
 		FRotator TextRotationAll = UKismetMathLibrary::FindLookAtRotation(PlayerLocation, TextActor->GetActorLocation());
 		FRotator TextRotation = FRotator(TextActor->GetActorRotation().Pitch, 180 + TextRotationAll.Yaw, TextRotationAll.Roll);
 		TextActor->SetActorRotation(TextRotation);
-	}
-
-	// Slow down when not jumping
-	if (!bWasJumping && GetMovementComponent()->Velocity.Z > 1.5f) {
-		GetMovementComponent()->Velocity.Z -= GetMovementComponent()->GetMaxSpeed();
 	}
 }
 
@@ -198,24 +241,32 @@ void ANetworkCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	// set up gameplay key bindings
 	check(PlayerInputComponent);
 
+	// Bind independent events
 	// Bind jump events
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
-	// Setup VR Reset
-	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ANetworkCharacter::OnResetVR);
-
-	// Bind movement events
+	// Bind keyboard movement events
 	PlayerInputComponent->BindAxis("MoveForward", this, &ANetworkCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ANetworkCharacter::MoveRight);
 
-	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
-	// "turn" handles devices that provide an absolute delta, such as a mouse.
-	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
+	// Bind mouse movement events
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("TurnRate", this, &ANetworkCharacter::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &ANetworkCharacter::LookUpAtRate);
+	
+	// Bind non-rv events
+	if(isInVR()) {
+		// Setup VR Reset
+		PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ANetworkCharacter::OnResetVR);
+
+		// Setup VR movement
+		PlayerInputComponent->BindAxis("Move", this, &ANetworkCharacter::MoveVR);
+		
+		// Setup VR turning
+		PlayerInputComponent->BindAction("TurnLeft", IE_Pressed, this, &ANetworkCharacter::TurnLeft);
+		PlayerInputComponent->BindAction("TurnRight", IE_Pressed, this, &ANetworkCharacter::TurnRight);
+
+	}
 }
 
 /** Called when unpossessed */
@@ -226,35 +277,51 @@ void ANetworkCharacter::UnPossessed() {
 	GetCharacterMovement()->StopMovementImmediately();
 }
 
+void ANetworkCharacter::MoveVR_Implementation(float Value) {
+	if (Value != 0.0f) {
+		// Launch the player in the direction of the left motion controller
+		APlayerCameraManager* manager = GetWorld()->GetFirstPlayerController()->PlayerCameraManager;
+		FVector launch = L_MotionController->GetComponentRotation().RotateVector(manager->GetActorForwardVector()) * LaunchSpeed * Value;
+		LaunchCharacter(launch, false, !(GetMovementComponent()->Velocity.Z > 0.0f));
+	}
+}
+
+bool ANetworkCharacter::MoveVR_Validate(float Value) {
+	return true;
+}
+
+void ANetworkCharacter::TurnLeft() {
+	// Turn left 45 degrees
+	UE_LOG(LogTemp, Warning, TEXT("TurnLeft"));
+	GetWorld()->GetFirstPlayerController()->AddYawInput( -45.f / GetWorld()->GetFirstPlayerController()->InputYawScale);
+}
+
+void ANetworkCharacter::TurnRight() {
+	// Turn right 45 degrees
+	UE_LOG(LogTemp, Warning, TEXT("TurnRight"));
+	GetWorld()->GetFirstPlayerController()->AddYawInput(45.f / GetWorld()->GetFirstPlayerController()->InputYawScale);
+}
+
 void ANetworkCharacter::MoveForward(float Value) {
 	if (Value != 0.0f) {
-		// add movement in that direction
+		// Add movement in that direction
 		AddMovementInput(GetActorForwardVector(), Value);
 	}
 }
 
 void ANetworkCharacter::MoveRight(float Value) {
 	if (Value != 0.0f) {
-		// add movement in that direction
+		// Add movement in that direction
 		AddMovementInput(GetActorRightVector(), Value);
 	}
 }
 
-void ANetworkCharacter::TurnAtRate(float Rate) {
-	// calculate delta for this frame from the rate information
-	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
-}
-
-void ANetworkCharacter::LookUpAtRate(float Rate) {
-	// calculate delta for this frame from the rate information
-	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
-}
-
 void ANetworkCharacter::OnResetVR() {
+	// Reset VR
 	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 }
 
-// Replication of info, rank, user
+// Replication of variables
 void ANetworkCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
@@ -263,4 +330,5 @@ void ANetworkCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(ANetworkCharacter, rank);
 	DOREPLIFETIME(ANetworkCharacter, username);
 	DOREPLIFETIME(ANetworkCharacter, isAdmin);
+	DOREPLIFETIME(ANetworkCharacter, L_MotionController);
 }

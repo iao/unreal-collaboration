@@ -6,6 +6,7 @@
 #include "HTTPService.h"
 #include "Net/UnrealNetwork.h"
 #include "Math/UnrealMathUtility.h"
+#include "HeadMountedDisplayFunctionLibrary.h"
 
 // Constructor
 ANetworkPlayerController::ANetworkPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
@@ -32,21 +33,24 @@ void ANetworkPlayerController::BeginPlay() {
 }
 
 // Simple warning if we failed to keep alive
-void ANetworkPlayerController::KeepAliveResponce(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
+void ANetworkPlayerController::KeepAliveResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
+	// Log if unsuccessful
 	if (!AHTTPService::ResponseIsValid(Response, bWasSuccessful)) {
 		UE_LOG(LogTemp, Warning, TEXT("Failed to keep server alive! May be kicked soon!"));
 	}
 }
 
 // Update the counter_max variable from the request
-void ANetworkPlayerController::TimeResponce(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
+void ANetworkPlayerController::TimeResponse(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
+	// Log if unsuccessful
 	if (!AHTTPService::ResponseIsValid(Response, bWasSuccessful)) {
 		UE_LOG(LogTemp, Warning, TEXT("Failed to get time! Assuming time is 15 minutes."));
 		return;
 	}
 
-	FTimeStruct_Responce responce;
-	FJsonObjectConverter::JsonObjectStringToUStruct<FTimeStruct_Responce>(Response->GetContentAsString(), &responce, 0, 0);
+	// Set timer to send /keepalive requests every time seconds, with a random offset (so that many clients don't call at the same time)
+	FTimeStruct_Response responce;
+	FJsonObjectConverter::JsonObjectStringToUStruct<FTimeStruct_Response>(Response->GetContentAsString(), &responce, 0, 0);
 	counter_max = responce.time;
 	GetWorldTimerManager().SetTimer(KeepAliveTimer, this, &ANetworkPlayerController::KeepAlive, counter_max, true, random_num);
 }
@@ -65,10 +69,18 @@ void ANetworkPlayerController::SetupInputComponent() {
 
 	check(InputComponent);
 	if (InputComponent) {
-		// Spawn a sign
-		InputComponent->BindAction("Spawn", IE_Pressed, this, &ANetworkPlayerController::Spawn);
-		InputComponent->BindAction("Hide", IE_Pressed, this, &ANetworkPlayerController::Hide);
+		// Spawn a sign if not in VR
+		FName HMDName = UHeadMountedDisplayFunctionLibrary::GetHMDDeviceName();
+		if (HMDName.IsEqual(FName("None")) || HMDName.IsEqual(FName("Unknown"))) {
+			InputComponent->BindAction("Spawn", IE_Pressed, this, &ANetworkPlayerController::Spawn);
+		} InputComponent->BindAction("Hide", IE_Pressed, this, &ANetworkPlayerController::Hide);
+		InputComponent->BindAction("Quit", IE_Pressed, this, &ANetworkPlayerController::Quit);
 	}
+}
+
+// Request to quit the game
+void ANetworkPlayerController::Quit() {
+	FGenericPlatformMisc::RequestExit(false);
 }
 
 // Send keep-alive to the selector server

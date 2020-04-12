@@ -19,25 +19,42 @@ class UNREALCOLLABORATION_API AHTTPService : public AActor {
 	GENERATED_BODY()
 
 private:
-	static TSharedRef<IHttpRequest> PostRequest(FString Subroute, FString ContentJsonString);
+	/** Send out a POST Request to a URL with JSON */
+	static TSharedRef<IHttpRequest> PostRequest(FString URL, FString ContentJsonString);
+
+	/** Send the request to the server */
 	static void Send(TSharedRef<IHttpRequest>& Request);
 
+	/** Load info.json as a string */
 	static FString LoadInfoJSON();
 
 public:
+	/** Check if a response is valid (i.e. code 200) */
 	static bool ResponseIsValid(FHttpResponsePtr Response, bool bWasSuccessful);
 
+	/** Convert between struct -> string */
 	template <typename StructType>
 	static void GetJsonStringFromStruct(StructType FilledStruct, FString& StringOutput);
+
+	/** Convert between string -> struct */
 	template <typename StructType>
 	static void GetStructFromJsonString(FString content, StructType& StructOutput);
 
+	/** Get info.json as a struct */
 	static FInfoJSONStruct GetInfoJSON();
 
+	/** Constructor */
 	AHTTPService();
+
+	/** BeginPlay */
 	virtual void BeginPlay() override;
 
+	/** Call /api/project/keepalive on UnrealSelector */
 	static void KeepAlive(FString URL, FKeepAliveStruct keepalive, ANetworkPlayerController* controller);
+
+	/** Call /api/project/info on UnrealSelector */
 	static void Info(FString URL, FInfoStruct_Request info, class ANetworkCharacter* character);
+
+	/** Call /api/project/time on UnrealSelector */
 	static void Time(FString URL, FTimeStruct_Request time, ANetworkPlayerController* controller);
 };

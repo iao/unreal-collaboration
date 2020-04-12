@@ -3,10 +3,8 @@
 using UnrealBuildTool;
 using System.Collections.Generic;
 
-public class UnrealCollaborationTarget : TargetRules
-{
-	public UnrealCollaborationTarget(TargetInfo Target) : base(Target)
-	{
+public class UnrealCollaborationTarget : TargetRules {
+	public UnrealCollaborationTarget(TargetInfo Target) : base(Target) {
 		Type = TargetType.Game;
 		DefaultBuildSettings = BuildSettingsVersion.V2;
 		ExtraModuleNames.Add("UnrealCollaboration");

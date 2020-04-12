@@ -2,7 +2,7 @@
 Demonetisation of networking components for Unreal project.
 
 ### What's This?
-This project demonstrates the features of **Unreal Collaboration** on top of Unreal's first person example project. 
+This project demonstrates the features of **Unreal Collaboration** on top of Unreal's first person example project. It features sign management, multiplayer & VR support, and administration through [Unreal Selector](https://gitlab.donald108.com/university/unreal-selector).
 
 For deployment, we clients will download their executable from [Unreal Selector](https://gitlab.donald108.com/university/unreal-selector) & a dedicated servers will be available for clients to connect to and explore together (see **Build**).
 The server is therefore a dedicated server which will run in a Linux environment, and the clients will be built for several platforms. 

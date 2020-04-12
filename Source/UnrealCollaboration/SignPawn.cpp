@@ -57,7 +57,7 @@ void ASignPawn::BeginPlay() {
 }
 
 void ASignPawn::Tick(float DeltaTime) {
-	// Face toward player in X
+	// Face toward player in XY
 	if (ShouldRotate && GetLocalRole() != ROLE_Authority && TextActor) {
 		FVector PlayerLocation = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->GetCameraLocation();
 		FRotator NewRotationAll = UKismetMathLibrary::FindLookAtRotation(PlayerLocation, GetActorLocation());
@@ -78,6 +78,7 @@ void ASignPawn::HideActor(bool toHide) {
 
 // Called to set the text from clients
 void ASignPawn::SetText(FText text) {
+	// Note, we deal with length constrains in the HUD
 	ServerSetText(text);
 }
 

@@ -2,12 +2,11 @@
 
 using UnrealBuildTool;
 
-public class UnrealCollaboration : ModuleRules
-{
-	public UnrealCollaboration(ReadOnlyTargetRules Target) : base(Target)
-	{
+public class UnrealCollaboration : ModuleRules {
+	public UnrealCollaboration(ReadOnlyTargetRules Target) : base(Target) {
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
+		// List of packages we use
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "Http", "Json", "JsonUtilities" });
 	}
 }
