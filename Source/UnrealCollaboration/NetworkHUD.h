@@ -28,6 +28,9 @@ public:
 	void SetVisible(bool visible);
 
 protected:
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = TextInfo)
+		int32 MaximumTextSize = 100;
+	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = SpawnInfo)
 		TSubclassOf<USignWidget> PlayerUIClass;
 

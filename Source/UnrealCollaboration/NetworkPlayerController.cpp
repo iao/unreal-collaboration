@@ -13,8 +13,8 @@ ANetworkPlayerController::ANetworkPlayerController(const FObjectInitializer& Obj
 	if (!SpawnableClass) SpawnableClass = ASignPawn::StaticClass();
 	isPawn = false;
 	isHidden = false;
-	counter_max = (60 * 1000 * 15); // Default is 15 minutes between calls
-	random_num = FMath::RandRange(1, 100);
+	counter_max = (60 * 1); // TODO: Default is 15 minutes between calls
+	random_num = FMath::RandRange(0, 30); // Clients will call at an offset of up to 30 seconds
 }
 
 // Called after constructor
@@ -47,7 +47,8 @@ void ANetworkPlayerController::TimeResponce(FHttpRequestPtr Request, FHttpRespon
 
 	FTimeStruct_Responce responce;
 	FJsonObjectConverter::JsonObjectStringToUStruct<FTimeStruct_Responce>(Response->GetContentAsString(), &responce, 0, 0);
-	counter_max = responce.time * 1000;
+	counter_max = responce.time;
+	GetWorldTimerManager().SetTimer(KeepAliveTimer, this, &ANetworkPlayerController::KeepAlive, counter_max, true, random_num);
 }
 
 // Check if the player matches the admin rank
@@ -75,25 +76,25 @@ void ANetworkPlayerController::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
 
 	// Ensure the server stays alive
-	if (GetLocalRole() != ROLE_Authority) {
-		counter += (DeltaTime * 1000);
-		if (counter > 2 * counter_max) counter = 0;
-
-		// Call /keepalive every counter_max milliseconds, with a random offset
-		if ((counter - random_num) % counter_max <= (DeltaTime * 1000)) {
-			FKeepAliveStruct keepalive;
-			keepalive.session = AHTTPService::GetInfoJSON().session;
-			keepalive.title = AHTTPService::GetInfoJSON().title;
-			FString URL = AHTTPService::GetInfoJSON().url + "/api/project/keepalive";
-
-			if (keepalive.session != "" && keepalive.title != "" && URL != "") {
-				AHTTPService::KeepAlive(URL, keepalive, this);
-			}
-		}
-
+	if(GetLocalRole() != ROLE_Authority) {
 		// Hide our text actor
 		ANetworkCharacter* Actor = Cast<ANetworkCharacter>(GetPawnOrSpectator());
 		if (Actor && Actor->TextActor) Actor->TextActor->HideActor(true);
+	}
+}
+
+// Called every counter_max seconds
+void ANetworkPlayerController::KeepAlive() {
+	if (GetLocalRole() != ROLE_Authority) {
+		// Call /keepalive every counter_max milliseconds, with a random offset
+		FKeepAliveStruct keepalive;
+		keepalive.session = AHTTPService::GetInfoJSON().session;
+		keepalive.title = AHTTPService::GetInfoJSON().title;
+		FString URL = AHTTPService::GetInfoJSON().url + "/api/project/keepalive";
+
+		if (keepalive.session != "" && keepalive.title != "" && URL != "") {
+			AHTTPService::KeepAlive(URL, keepalive, this);
+		}
 	}
 }
 

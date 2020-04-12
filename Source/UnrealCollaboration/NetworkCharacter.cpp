@@ -58,7 +58,7 @@ ANetworkCharacter::ANetworkCharacter() {
 	BoxComponent->SetIsReplicated(true);
 
 	// TODO: VR Support fully :)
-	// TODO: Fix /keepalive in the player controller
+	// TODO: Comments!!!
 	
 	// Allow ticks
 	PrimaryActorTick.bCanEverTick = true;

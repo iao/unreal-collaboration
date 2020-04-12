@@ -4,9 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "Components/EditableTextBox.h"
+#include "Components/MultiLineEditableTextBox.h"
 #include "Components/Button.h"
 #include "Internationalization/Text.h"
+#include "Components/TextBlock.h"
 #include "SignWidget.generated.h"
 
 UCLASS()
@@ -15,7 +16,10 @@ class UNREALCOLLABORATION_API USignWidget : public UUserWidget {
 
 public:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
-		UEditableTextBox* TheBox;
+		UTextBlock* ErrorBox;
+	
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+		UMultiLineEditableTextBox* TheBox;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		UButton* ConfirmButton;

@@ -18,7 +18,8 @@ class UNREALCOLLABORATION_API ANetworkPlayerController : public APlayerControlle
 	GENERATED_BODY()
 
 protected:
-	long int counter, counter_max, random_num;
+	FTimerHandle KeepAliveTimer;
+	long int counter_max, random_num;
 	ASignPawn* ThePawn;
 	
 	UPROPERTY(Transient, ReplicatedUsing = OnRep_Pawn)
@@ -54,11 +55,13 @@ public:
 	virtual void BeginPlay() override;
 	virtual void SetupInputComponent() override;
 	virtual void Tick(float DeltaTime) override;
+	void KeepAlive();
 	void Spawn();
 	void Hide();
 
 	UFUNCTION()
 		void Delete();
+	
 	void OnRep_Pawn();
 	
 	UFUNCTION(Server, Reliable, WithValidation)
