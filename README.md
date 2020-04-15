@@ -38,5 +38,6 @@ When testing multiplayer, you should ensure that `Dedicated Server` is on - unle
 You may consider turning off `Use Single Process` in advanced play settings, ensure when doing this you select `Play as Client`. This means that the server will be `fork()`ed from the main process and can run in isolation.
 
 #### Virtual Reality
-When testing in VR, ensure that `Use Single Process` is on single SteamVR seems to have some kind of non-locking mutex that returns `NULL` on failure and kills one of the rendering threads (`SharedPointer.h:851` will fail its assertion).
-You can launch a dedicated server in a round-about matter by launching it with `Use Single Process` on, allowing the main process to crash, and *without changing code* relaunching and closing the new server that is created.
+When testing in VR, ensure that `Use Single Process` is off initially. After launching, you can turn `Use Single Process` back on - however there will be no VR display. To get it displayed, start play again.
+Starting with `Use Single Process` on crashes one of the rendering threads (`SharedPointer.h:851` will fail its assertion) and gives you no information of what happened (apart from `DepthSwapChain` was `NULL`).
+You can also try another round-about method, but this doesn't always work: launch the game with `Use Single Process` on, allow the main process to crash, and *without changing code* relaunch and close the new server that is created.

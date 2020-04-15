@@ -8,6 +8,7 @@
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "MotionControllerComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "VRNetworkCharacter.h"
 
 AVRNetworkPlayerController::AVRNetworkPlayerController(const FObjectInitializer& ObjectInitializer) : ABaseNetworkPlayerController(ObjectInitializer) {}
 
@@ -27,6 +28,9 @@ void AVRNetworkPlayerController::SetupInputComponent() {
 		// Setup VR turning
 		InputComponent->BindAction("TurnLeft", IE_Pressed, this, &AVRNetworkPlayerController::TurnLeft);
 		InputComponent->BindAction("TurnRight", IE_Pressed, this, &AVRNetworkPlayerController::TurnRight);
+
+		// Setup VR movement
+		InputComponent->BindAxis("Move", this, &AVRNetworkPlayerController::MoveVR);
 	}
 }
 
@@ -44,6 +48,27 @@ void AVRNetworkPlayerController::Hide() {
 	}
 }
 
+void AVRNetworkPlayerController::MoveVR(float Value) {
+	if (Value != 0.0f) {
+		// Launch the player in the direction of the right motion controller
+		AVRNetworkCharacter* character = Cast<AVRNetworkCharacter>(GetPawnOrSpectator());
+		if (character) {
+			FVector launch = character->RController->MotionController->GetComponentRotation().RotateVector(FVector(1.f, 1.f, 1.f)) * LaunchSpeed * Value;
+			ServerMoveVR(launch);
+		}
+	}
+}
+
+void AVRNetworkPlayerController::ServerMoveVR_Implementation(FVector vector) {
+	// Launch the player in the direction of the right motion controller
+	AVRNetworkCharacter* character = Cast<AVRNetworkCharacter>(GetPawnOrSpectator());
+	if(character) character->LaunchCharacter(vector, false, !(character->GetMovementComponent()->Velocity.Z > 0.0f));
+}
+
+bool AVRNetworkPlayerController::ServerMoveVR_Validate(FVector vector) {
+	return true;
+}
+
 void AVRNetworkPlayerController::OnResetVR() {
 	// Reset VR
 	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
@@ -51,18 +76,12 @@ void AVRNetworkPlayerController::OnResetVR() {
 
 void AVRNetworkPlayerController::TurnLeft() {
 	// Turn left 45 degrees
-	//AddYawInput(-45.f / InputYawScale);
-	FRotator currentRot;
-	FVector currentPos;
-	UHeadMountedDisplayFunctionLibrary::GetOrientationAndPosition(currentRot, currentPos);
-	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition(currentRot.Yaw - 45);
+	AddYawInput(-45.0f / InputYawScale);
+	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 }
 
 void AVRNetworkPlayerController::TurnRight() {
 	// Turn right 45 degrees
-	//AddYawInput(45.f / InputYawScale);
-	FRotator currentRot;
-	FVector currentPos;
-	UHeadMountedDisplayFunctionLibrary::GetOrientationAndPosition(currentRot, currentPos);
-	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition(currentRot.Yaw + 45);
+	AddYawInput(45.0f / InputYawScale);
+	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 }

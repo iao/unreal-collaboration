@@ -23,10 +23,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = VR, meta = (AllowPrivateAccess = "true"))
 		UMotionControllerComponent* MotionController;
 
-	/** Motion controller mesh */
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = VR, meta = (AllowPrivateAccess = "true"))
-		//UStaticMeshComponent* ControllerMesh;
-
 	/** Set the motion source for this actor */
 	void SetSource(FName source);
 	

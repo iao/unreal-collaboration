@@ -20,10 +20,6 @@ AVRControllerActor::AVRControllerActor(const FObjectInitializer& ObjectInitializ
 	MotionController->SetupAttachment(VROrigin);
 	MotionController->bDisplayDeviceModel = true;
 	MotionController->CastShadow = true;
-	
-	// Create the mesh
-	//ControllerMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ControllerMesh"));
-	//ControllerMesh->SetupAttachment(MotionController);
 }
 
 void AVRControllerActor::SetSource(FName source) {

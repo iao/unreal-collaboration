@@ -18,7 +18,7 @@ AVRNetworkCharacter::AVRNetworkCharacter() : ABaseNetworkCharacter() {
 	
 	// Setup rotation options
 	bUseControllerRotationPitch = false;
-	bUseControllerRotationYaw = false;
+	bUseControllerRotationYaw = true;
 	bUseControllerRotationRoll = false;
 
 	// Setup VR Origin
@@ -28,6 +28,7 @@ AVRNetworkCharacter::AVRNetworkCharacter() : ABaseNetworkCharacter() {
 	// Setup camera
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(VROrigin);
+	Camera->SetRelativeLocation(FVector(0.f, 0.f, 64.f)); // Position the camera where the actors head is
 	
 	// Create a mesh component that will be used when being viewed from a '3rd person' view (when not controlling this pawn)
 	Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh3P"));
@@ -44,25 +45,22 @@ void AVRNetworkCharacter::BeginPlay() {
 	// Set the floor
 	UHeadMountedDisplayFunctionLibrary::SetTrackingOrigin(EHMDTrackingOrigin::Floor);
 	
-	// Spawn the controllers
-	//if (IsLocallyControlled()) {
-		// Spawn the right controller
-		RController = GetWorld()->SpawnActor<AVRControllerActor>(ControllerClass->GetAuthoritativeClass(), VROrigin->GetComponentTransform());
-		RController->SetOwner(this);
-		RController->SetSource(FName("Right"));
-	
-		// Attach to the VR Origin
-		RController->AttachToComponent(VROrigin, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, false));
-		//RController->AttachToComponent(VROrigin, FAttachmentTransformRules::KeepWorldTransform);
-		//ServerSetController(controller, true);
+	// Spawn the right controller
+	RController = GetWorld()->SpawnActor<AVRControllerActor>(ControllerClass->GetAuthoritativeClass(), VROrigin->GetComponentTransform());
+	RController->SetOwner(this);
+	RController->SetSource(FName("Right"));
 
-		//RController = GetWorld()->SpawnActorDeferred<AVRControllerActor>(SpawnableClass->GetAuthoritativeClass(), FTransform());
-		//RController->name = FName("Left");
-		//UGameplayStatics::FinishSpawningActor(RController, FTransform());
-		
-		// Finally, reset our position
-		UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
-	//}
+	// Spawn the left controller
+	LController = GetWorld()->SpawnActor<AVRControllerActor>(ControllerClass->GetAuthoritativeClass(), VROrigin->GetComponentTransform());
+	LController->SetOwner(this);
+	LController->SetSource(FName("Left"));
+
+	// Attach to the VR Origin
+	RController->AttachToComponent(VROrigin, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, false));
+	LController->AttachToComponent(VROrigin, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, false));
+
+	// Finally, reset our position
+	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 	
 	// Show or hide meshes based on if we are locally controlling the character
 	Mesh3P->SetVisibility(!IsLocallyControlled());
@@ -73,7 +71,8 @@ void AVRNetworkCharacter::Tick(float DeltaTime) {
 
 	FVector location = GetActorLocation();
 	UE_LOG(LogTemp, Warning, TEXT("My location is %f %f %f"), location.X, location.Y, location.Z);
-	
+
+	// If we are moving too fast, slow down
 	if (GetLocalRole() == ROLE_Authority) {
 		if (GetMovementComponent()->Velocity.X > XYMaxSpeed) {
 			GetMovementComponent()->Velocity.X = XYMaxSpeed - (XYMaxSpeed / 10);
@@ -89,36 +88,4 @@ void AVRNetworkCharacter::Tick(float DeltaTime) {
 			GetMovementComponent()->Velocity.Z = -ZMaxSpeed + (ZMaxSpeed / 10);
 		}
 	}
-}
-
-void AVRNetworkCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) {
-	// Bind VR events (binding is always allowed on the server)
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	// Bind VR Actions
-	check(PlayerInputComponent);
-	if (PlayerInputComponent) {
-		// Setup VR movement
-		InputComponent->BindAxis("Move", this, &AVRNetworkCharacter::MoveVR);
-	}
-}
-
-void AVRNetworkCharacter::MoveVR(float Value) {
-	if (Value != 0.0f) {
-		// Launch the player in the direction of the right motion controller
-		AVRNetworkPlayerController* controller = Cast< AVRNetworkPlayerController>(GetWorld()->GetFirstPlayerController());
-		if (controller) {
-			FVector launch = RController->MotionController->GetComponentRotation().RotateVector(controller->PlayerCameraManager->GetActorForwardVector()) * LaunchSpeed * Value;
-			ServerMoveVR(launch);
-		}
-	}
-}
-
-void AVRNetworkCharacter::ServerMoveVR_Implementation(FVector vector) {
-	// Launch the player in the direction of the left motion controller
-	LaunchCharacter(vector, false, !(GetMovementComponent()->Velocity.Z > 0.0f));
-}
-
-bool AVRNetworkCharacter::ServerMoveVR_Validate(FVector vector) {
-	return true;
 }

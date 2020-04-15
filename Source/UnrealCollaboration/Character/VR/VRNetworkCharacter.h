@@ -43,24 +43,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = VRMovement)
 		float ZMaxSpeed = 1000.f;
 
-	/** Launch speed for the player */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = VRMovement)
-		float LaunchSpeed = 100.f;
-
 protected:
 	/** Begins play for this actor */
 	void BeginPlay() override;
 
 	/** Called every frame */
 	void Tick(float DeltaTime) override;
-
-	/** Setup inputs */
-	void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
-
-	/* Handles moving in VR for the client */
-	void MoveVR(float Value);
-
-	/* Handles moving in VR for the server */
-	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerMoveVR(FVector vector);
 };
