@@ -31,3 +31,12 @@ To build an **Unreal Collaboration** server, please do the following:
 5. Setup execute permissions of the server in `Binaries/${OS_NAME}/${PROJECT_NAME}Server`
 6. Move the built server executable from `Binaries/${OS_NAME}/${PROJECT_NAME}Server` to `Build/${OS_NAME}NoEditor/${UNREAL_PROJECT_NAME}/Binaries/${OS_NAME}/`
 7. Move the *contents* of `Build/${OS_NAME}NoEditor/` to its own folder (***the name of this folder should be the name of the final project***), which can be used for client distrubution (by zipping it).
+
+### Notes for Testing
+#### Multiplayer
+When testing multiplayer, you should ensure that `Dedicated Server` is on - unless you want to *see* what is going on in the server, where you should turn off `Dedicated Server`, and set the number of players to >1.
+You may consider turning off `Use Single Process` in advanced play settings, ensure when doing this you select `Play as Client`. This means that the server will be `fork()`ed from the main process and can run in isolation.
+
+#### Virtual Reality
+When testing in VR, ensure that `Use Single Process` is on single SteamVR seems to have some kind of non-locking mutex that returns `NULL` on failure and kills one of the rendering threads (`SharedPointer.h:851` will fail its assertion).
+You can launch a dedicated server in a round-about matter by launching it with `Use Single Process` on, allowing the main process to crash, and *without changing code* relaunching and closing the new server that is created.

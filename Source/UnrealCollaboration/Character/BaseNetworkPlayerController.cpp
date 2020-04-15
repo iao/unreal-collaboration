@@ -13,7 +13,7 @@
 ABaseNetworkPlayerController::ABaseNetworkPlayerController(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
 	// Setup Defaults
 	isHidden = false;
-	counter_max = (60 * 1); // TODO: Default is 15 minutes between calls
+	counter_max = (60 * 15); // Default is 15 minutes between calls
 	random_num = FMath::RandRange(0, 30); // Clients will call at an offset of up to 30 seconds
 }
 

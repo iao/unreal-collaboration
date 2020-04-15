@@ -181,18 +181,6 @@ void ABaseNetworkCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 }
 
-void ABaseNetworkCharacter::TurnLeft() {
-	// Turn left 45 degrees
-	UE_LOG(LogTemp, Warning, TEXT("TurnLeft"));
-	GetWorld()->GetFirstPlayerController()->AddYawInput( -45.f / GetWorld()->GetFirstPlayerController()->InputYawScale);
-}
-
-void ABaseNetworkCharacter::TurnRight() {
-	// Turn right 45 degrees
-	UE_LOG(LogTemp, Warning, TEXT("TurnRight"));
-	GetWorld()->GetFirstPlayerController()->AddYawInput(45.f / GetWorld()->GetFirstPlayerController()->InputYawScale);
-}
-
 void ABaseNetworkCharacter::MoveForward(float Value) {
 	if (Value != 0.0f) {
 		// Add movement in that direction

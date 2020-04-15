@@ -102,12 +102,6 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 public:
-	/* Handles turning left VR */
-	void TurnLeft();
-
-	/* Handles turning right VR */
-	void TurnRight();
-
 	/** Handles moving forward/backward */
 	void MoveForward(float Value);
 
