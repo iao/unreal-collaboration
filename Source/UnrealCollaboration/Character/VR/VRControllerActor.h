@@ -15,6 +15,10 @@ public:
 	/** Sets default values for this actor's properties */
 	AVRControllerActor(const FObjectInitializer& ObjectInitializer);
 	
+	/** Scene Component */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = VR, meta = (AllowPrivateAccess = "true"))
+		USceneComponent* Scene;
+
 	/** Motion controller */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = VR, meta = (AllowPrivateAccess = "true"))
 		UMotionControllerComponent* MotionController;

@@ -10,10 +10,14 @@ AVRControllerActor::AVRControllerActor(const FObjectInitializer& ObjectInitializ
 
 	// We have no collision
 	SetActorEnableCollision(false);
+
+	// Create the scene
+	Scene = CreateDefaultSubobject<USceneComponent>(TEXT("Scene"));
+	Scene->SetupAttachment(RootComponent);
 	
 	// Create the controller
 	MotionController = CreateDefaultSubobject<UMotionControllerComponent>(TEXT("MotionController"));
-	MotionController->SetupAttachment(RootComponent);
+	MotionController->SetupAttachment(Scene);
 	MotionController->bDisplayDeviceModel = true;
 	MotionController->CastShadow = true;
 }

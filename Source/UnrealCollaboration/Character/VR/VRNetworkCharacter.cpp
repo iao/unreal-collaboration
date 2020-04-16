@@ -28,7 +28,6 @@ AVRNetworkCharacter::AVRNetworkCharacter() : ABaseNetworkCharacter() {
 	// Setup camera
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(VROrigin);
-	Camera->bUsePawnControlRotation = true;
 	
 	// Create a mesh component that will be used when being viewed from a '3rd person' view (when not controlling this pawn)
 	Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh3P"));
@@ -42,7 +41,6 @@ void AVRNetworkCharacter::BeginPlay() {
 
 	// We are in standing mode
 	UHeadMountedDisplayFunctionLibrary::SetTrackingOrigin(EHMDTrackingOrigin::Floor);
-	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 	
 	// Spawn the right controller
 	RController = GetWorld()->SpawnActor<AVRControllerActor>(ControllerClass->GetAuthoritativeClass(), FVector(), FRotator());
