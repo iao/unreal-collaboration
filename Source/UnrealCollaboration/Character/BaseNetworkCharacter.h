@@ -16,11 +16,12 @@ UCLASS(config = Game)
 class ABaseNetworkCharacter : public ACharacter {
 	GENERATED_BODY()
 
-protected:
+public:
 	/** Pawn mesh: 3rd person view (seen only by others) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Mesh, meta = (AllowPrivateAccess = "true"))
 		class USkeletalMeshComponent* Mesh3P;
-	
+
+protected:
 	/** The box where the text render component is attached to */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class UBoxComponent* BoxComponent;

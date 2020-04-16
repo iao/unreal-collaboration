@@ -103,14 +103,16 @@ void ABaseNetworkCharacter::InfoResponse(FHttpRequestPtr Request, FHttpResponseP
 
 // Client-side change function
 void ABaseNetworkCharacter::Change(FInfoStruct_Response response) {
-	// Set variables on client
-	username = response.username;
-	info = response.info;
-	rank = response.rank;
-	isAdmin = response.isAdmin;
+	if (GetLocalRole() == ROLE_AutonomousProxy) {
+		// Set variables on client
+		username = response.username;
+		info = response.info;
+		rank = response.rank;
+		isAdmin = response.isAdmin;
 
-	// Let Blueprint know, then update the server
-	ServerChange(response);
+		// Let Blueprint know, then update the server
+		ServerChange(response);
+	}
 }
 
 // Server side change function

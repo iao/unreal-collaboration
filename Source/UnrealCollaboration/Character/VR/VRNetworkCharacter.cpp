@@ -16,7 +16,7 @@
 AVRNetworkCharacter::AVRNetworkCharacter() : ABaseNetworkCharacter() {
 	if (!ControllerClass) ControllerClass = AVRControllerActor::StaticClass();
 	
-	// Setup rotation options
+	// Setup rotation options (prevent sickness)
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = true;
 	bUseControllerRotationRoll = false;
@@ -28,39 +28,36 @@ AVRNetworkCharacter::AVRNetworkCharacter() : ABaseNetworkCharacter() {
 	// Setup camera
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(VROrigin);
-	Camera->SetRelativeLocation(FVector(0.f, 0.f, 64.f)); // Position the camera where the actors head is
+	Camera->bUsePawnControlRotation = true;
 	
 	// Create a mesh component that will be used when being viewed from a '3rd person' view (when not controlling this pawn)
 	Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh3P"));
 	Mesh3P->SetupAttachment(VROrigin);
 	Mesh3P->SetRelativeRotation(FRotator(0.0f, 270.0f, 0.0f));
-	Mesh3P->SetRelativeLocation(FVector(0.0f, 0.0f, -91.7f)); // Position the mesh so that it aligns with the capsule	
+	Mesh3P->SetRelativeLocation(FVector(0.0f, 0.0f, -91.7f)); // Position the mesh so that it aligns with the capsule
 }
 
 void AVRNetworkCharacter::BeginPlay() {
 	Super::BeginPlay();
 
-	UE_LOG(LogTemp, Warning, TEXT("I am %d"), UGameplayStatics::GetPlayerControllerID(GetWorld()->GetFirstPlayerController()));
-
-	// Set the floor
+	// We are in standing mode
 	UHeadMountedDisplayFunctionLibrary::SetTrackingOrigin(EHMDTrackingOrigin::Floor);
+	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 	
 	// Spawn the right controller
-	RController = GetWorld()->SpawnActor<AVRControllerActor>(ControllerClass->GetAuthoritativeClass(), VROrigin->GetComponentTransform());
+	RController = GetWorld()->SpawnActor<AVRControllerActor>(ControllerClass->GetAuthoritativeClass(), FVector(), FRotator());
 	RController->SetOwner(this);
 	RController->SetSource(FName("Right"));
 
 	// Spawn the left controller
-	LController = GetWorld()->SpawnActor<AVRControllerActor>(ControllerClass->GetAuthoritativeClass(), VROrigin->GetComponentTransform());
+	LController = GetWorld()->SpawnActor<AVRControllerActor>(ControllerClass->GetAuthoritativeClass(), FVector(), FRotator());
 	LController->SetOwner(this);
 	LController->SetSource(FName("Left"));
 
 	// Attach to the VR Origin
+	// TODO: This still doesnt work (fix)
 	RController->AttachToComponent(VROrigin, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, false));
 	LController->AttachToComponent(VROrigin, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, false));
-
-	// Finally, reset our position
-	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 	
 	// Show or hide meshes based on if we are locally controlling the character
 	Mesh3P->SetVisibility(!IsLocallyControlled());
@@ -68,9 +65,6 @@ void AVRNetworkCharacter::BeginPlay() {
 
 void AVRNetworkCharacter::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
-
-	FVector location = GetActorLocation();
-	UE_LOG(LogTemp, Warning, TEXT("My location is %f %f %f"), location.X, location.Y, location.Z);
 
 	// If we are moving too fast, slow down
 	if (GetLocalRole() == ROLE_Authority) {

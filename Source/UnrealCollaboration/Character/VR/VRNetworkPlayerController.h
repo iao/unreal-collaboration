@@ -26,7 +26,7 @@ protected:
 
 	/* Handles turning right VR */
 	void TurnRight();
-
+	
 	/** Resets HMD orientation and position in VR. */
 	void OnResetVR();
 

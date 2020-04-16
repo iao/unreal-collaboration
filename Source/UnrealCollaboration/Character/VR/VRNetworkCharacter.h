@@ -14,7 +14,7 @@ class UNREALCOLLABORATION_API AVRNetworkCharacter : public ABaseNetworkCharacter
 
 public:
 	AVRNetworkCharacter();
-
+	
 	/** VR Origin Component */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = VR, meta = (AllowPrivateAccess = "true"))
 		USceneComponent* VROrigin;

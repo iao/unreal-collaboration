@@ -76,12 +76,10 @@ void AVRNetworkPlayerController::OnResetVR() {
 
 void AVRNetworkPlayerController::TurnLeft() {
 	// Turn left 45 degrees
-	AddYawInput(-45.0f / InputYawScale);
-	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
+	AddYawInput(-45.0 / InputYawScale);
 }
 
 void AVRNetworkPlayerController::TurnRight() {
 	// Turn right 45 degrees
-	AddYawInput(45.0f / InputYawScale);
-	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
+	AddYawInput(45.0 / InputYawScale);
 }
