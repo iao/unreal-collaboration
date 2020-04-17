@@ -32,6 +32,11 @@ To build an **Unreal Collaboration** server, please do the following:
 6. Move the built server executable from `Binaries/${OS_NAME}/${PROJECT_NAME}Server` to `Build/${OS_NAME}NoEditor/${UNREAL_PROJECT_NAME}/Binaries/${OS_NAME}/`
 7. Move the *contents* of `Build/${OS_NAME}NoEditor/` to its own folder (***the name of this folder should be the name of the final project***), which can be used for client distrubution (by zipping it).
 
+### Connections we use
+For our functionality with [Unreal Selector](https://gitlab.donald108.com/university/unreal-selector), we use some external connections:
+* Client connecting to server: The client finds the server IP address through Unreal Selector, and uses that IP address to connect.
+* Client connecting to Unreal Selector writes a file (`Content/info.json`) containing its URL, the title of the game, the uses unreal selector session & the port the server is on.
+
 ### Notes for Testing
 #### Multiplayer
 When testing multiplayer, you should ensure that `Dedicated Server` is on - unless you want to *see* what is going on in the server, where you should turn off `Dedicated Server`, and set the number of players to >1.
