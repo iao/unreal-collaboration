@@ -53,12 +53,11 @@ void AVRNetworkCharacter::BeginPlay() {
 	LController->SetSource(FName("Left"));
 
 	// Attach to the VR Origin
-	// TODO: This still doesnt work (fix)
 	RController->AttachToComponent(VROrigin, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, false));
 	LController->AttachToComponent(VROrigin, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, false));
 	
 	// Show or hide meshes based on if we are locally controlling the character
-	Mesh3P->SetVisibility(!IsLocallyControlled());
+	Mesh3P->SetVisibility(!IsLocallyControlled(), true);
 }
 
 void AVRNetworkCharacter::Tick(float DeltaTime) {

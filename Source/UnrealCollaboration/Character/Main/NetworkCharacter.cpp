@@ -42,8 +42,8 @@ void ANetworkCharacter::BeginPlay() {
 	Super::BeginPlay();
 
 	// Show or hide meshes based on if we are locally controlling the character
-	Mesh1P->SetVisibility(IsLocallyControlled());
-	Mesh3P->SetVisibility(!IsLocallyControlled());
+	Mesh1P->SetVisibility(IsLocallyControlled(), true);
+	Mesh3P->SetVisibility(!IsLocallyControlled(), true);
 }
 
 void ANetworkCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) {
