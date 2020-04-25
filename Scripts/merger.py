@@ -89,7 +89,9 @@ if __name__ == "__main__":
 
     # Input the things we need to into Config
     # DefaultEngine -> [HTTP] & [CoreRedirects]
+    # DefaultGameUserSettings -> []
     if not args.update:
+        # DeafultEngine
         with open(os.path.join(args.path, "Config/DefaultEngine.ini"), "a") as f:
             # Write redirects
             f.write("\n[CoreRedirects]\n")
@@ -106,6 +108,12 @@ if __name__ == "__main__":
             f.write("HttpSendTimeout=-1\n")
             f.write("HttpMaxConnectionsPerServer=16\nbEnableHttp=true\nbUseNullHttp=false\n")
             f.write("HttpDelayTime=0")
+
+        # DefaultGameUserSettings
+        with open(os.path.join(args.path, "Config/DefaultGameUserSettings.ini"), "a") as f:
+            f.write("\n[/Script/Engine.GameUserSettings]\n")
+            f.write("FullscreenMode=2\n")
+            f.write("Version=5\n")
 
     # Include inputs if asked
     if args.inputs and not args.update:
