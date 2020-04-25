@@ -110,7 +110,7 @@ if __name__ == "__main__":
             f.write("HttpDelayTime=0")
 
         # DefaultGameUserSettings
-        with open(os.path.join(args.path, "Config/DefaultGameUserSettings.ini"), "a") as f:
+        with open(os.path.join(args.path, "Config/DefaultGameUserSettings.ini"), "w") as f:
             f.write("\n[/Script/Engine.GameUserSettings]\n")
             f.write("FullscreenMode=2\n")
             f.write("Version=5\n")
