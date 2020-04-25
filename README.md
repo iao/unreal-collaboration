@@ -12,16 +12,18 @@ To build the project, if you are planning on cross-compiling to Linux [install U
 ### Build
 To build an **Unreal Collaboration** server, please do the following:
 1. First setup the project for packaging
-    * Setup the Gamemode to use your Blueprinted extensions of the following: `NetworkCharacter` as the default pawn, `NetworkPlayerController` as the default Player Controller, and `NetworkHUD` as the default HUD
-    * Setup the *Entry* level to use `NetworkStartScriptActor` as it's parent class
-    * *Entry* and *Transation* levels must be added. All maps must be selected to be cooked
+    * Setup the Gamemode to use a Blueprinted extension of `NetworkBaseGameMode`, setting the default HUD to be a Blueprinted extensions of `NetworkHUD`
+    * Set the required character & player controller subclasses within the bgamemode blueprint to point to blueprinted extensions of the required classes
+    * Setup an empty world called *Transation*, and ensure it has been built
+    * Select the transition level to be *Transition* within *Project Settings*, ensure it & your main world are going to be cooked
     * Everything should be setup to allow for cooking (for example, one should not be referening `UBlueprint` within code as these are not explicitly packaged (only the generared code is) and instead should use Blueprints to select the Blueprint to use)
-2. Once the project is setup for packaging, follow the instructions for deployment using [Unreal Selector](https://gitlab.donald108.com/university/unreal-selector) on Windows or Linux below
+2. Follow the instructions below to package the project for client or server use.
+3. If project is going to be deployed using [Unreal Selector](https://gitlab.donald108.com/university/unreal-selector), follow the steps outlined there to add the project.
 
 #### Client
 1. Compile & run the project using the `Development Editor` build
 2. Package the project for the target client architecture(s), save in a known location (e.g. `Build`) using File -> Package Project in the editor
-3. Move the *contents* of `Build/${OS_NAME}NoEditor/` to its own folder (***the name of this folder should be the name of the final project***), which can be used for server distrubution.
+3. Move the *contents* of `Build/${OS_NAME}NoEditor/` to its own folder (***the name of this folder should be the name of the final project***), which can be used for client distrubution (by zipping it).
 
 #### Server
 1. Compile & run the project using the `Development Editor` build
@@ -30,7 +32,7 @@ To build an **Unreal Collaboration** server, please do the following:
 4. Right click on the solution, and click Build
 5. Setup execute permissions of the server in `Binaries/${OS_NAME}/${PROJECT_NAME}Server`
 6. Move the built server executable from `Binaries/${OS_NAME}/${PROJECT_NAME}Server` to `Build/${OS_NAME}NoEditor/${UNREAL_PROJECT_NAME}/Binaries/${OS_NAME}/`
-7. Move the *contents* of `Build/${OS_NAME}NoEditor/` to its own folder (***the name of this folder should be the name of the final project***), which can be used for client distrubution (by zipping it).
+7. Move the *contents* of `Build/${OS_NAME}NoEditor/` to its own folder (***the name of this folder should be the name of the final project***), which can be used for server distrubution.
 
 ### Connections we use
 For our functionality with [Unreal Selector](https://gitlab.donald108.com/university/unreal-selector), we use some external connections:
@@ -38,13 +40,32 @@ For our functionality with [Unreal Selector](https://gitlab.donald108.com/univer
 * Client connecting to Unreal Selector writes a file (`Content/info.json`) containing its URL, the title of the game, the uses unreal selector session & the port the server is on.
 
 ### Exporting to existing project
-**Ensure your project is built to support C++ & has recently been ran**
-Run the following to improve Unreal Collaboration to your existing project, where `${PATH}` the path to the root project directory you want to include Unreal Collaboration in:
-```
-python Scripts/merger.py "${PATH}"
-```
+#### First Time export
+Please follow the following steps to add Unreal Collaboration to your project:
+1. **Before making any changes to your project we suggest you make a back up or commit to a VCS**
+2. Ensure your project is built to support C++, please check out [this article](https://allarsblog.com/2015/11/05/converting-bp-project-to-cpp/) to add C++ support if it isn't supported
+3. Ensure your project has been compiled & runs within Visual Stuido
+4. Run the following to import Unreal Collaboration to your existing project, where `${PATH}` the path to the root project directory you want to include Unreal Collaboration in:
+    ```
+    python Scripts/merger.py "${PATH}"
+    ```
+    *Note*: You can add `--no-add-inputs` for our input bindings to not be added by default. Please check out **Inputs** to add them manually
+5. Rebuild Visual Studio Project files
+6. Enjoy!
 
-*Note*: You can add `--no-add-inputs` for our inputs to not be added by default
+*Note*: We also provide starter blueprint content you can import to your project, import them by following [this guide](https://www.ue4community.wiki/Legacy/Migrate_content_between_projects)
+
+#### Updating an existing project
+Please following the following steps to update Unreal Collaboration within your project:
+1. **Before making any changes to your project we suggest you make a back up or commit to a VCS**
+2. Ensure your project has been compiled & runs within Visual Stuido
+3. Run the following to update Unreal Collaboration in your existing project, where `${PATH}` the path to the root project directory you want to include Unreal Collaboration in:
+    ```
+    python Scripts/merger.py "${PATH}" --update
+    ```
+4. Rebuild Visual Studio Project files
+5. There may be errors due to the removal of classes from Unreal Collaboration that the script hasn't removed. Please find & remove these classes manually by deleting them from file explorer. After deleting these classes, ensure you rebuild Visual Studio Project files again.
+6. Enjoy!
 
 ### Notes for Testing
 #### Multiplayer

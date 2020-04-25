@@ -1,6 +1,6 @@
 # Script to allow us to merge with another prroject
 # Automates https://www.ue4community.wiki/Legacy/Migrate_content_between_projects
-import argparse, sys, os
+import argparse, sys, os, shutil
 from distutils.dir_util import copy_tree
 from pathlib import Path
 
@@ -36,9 +36,9 @@ if __name__ == "__main__":
     # Setup parser
     parser = argparse.ArgumentParser(description="Merge this project with another")
     parser.add_argument('path', type=dir_path, help="Path to the directory to merge. Must be contain .uproject")
-    parser.add_argument('--add-inputs', dest='inputs', action='store_true', help="Include default input bindings")
-    parser.add_argument('--no-add-inputs', dest='inputs', action='store_false', help="Include default input bindings")
-    parser.set_defaults(inputs=True)
+    parser.add_argument('--no-add-inputs', dest='inputs', action='store_false', help="Include default input bindings for unreal collaboration")
+    parser.add_argument('--update', dest='update', action='store_true', help="Update the target projects version of unreal collaboration")
+    parser.set_defaults(inputs=True, update=False)
 
     # Get arguments
     args = parser.parse_args()
@@ -47,16 +47,32 @@ if __name__ == "__main__":
     name = find_name(args.path)
 
     # Inside of Source there should be Project.Target.cs
-    with open(os.path.join(args.path, "Source/" + name + "Server.Target.cs"), "w") as f:
-        f.write("// Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.\n\n")
-        f.write("using UnrealBuildTool;\nusing System.Collections.Generic;\n\n")
-        f.write("public class " + name + "ServerTarget : TargetRules {\n")
-        f.write("    public " + name + "ServerTarget(TargetInfo Target) : base(Target) {\n")
-        f.write("        Type = TargetType.Server;\n")
-        f.write("        DefaultBuildSettings = BuildSettingsVersion.V2;\n")
-        f.write("        ExtraModuleNames.Add(\"" + name + "\");\n")
-        f.write("    }\n")
-        f.write("}\n")
+    if not args.update:
+        with open(os.path.join(args.path, "Source/" + name + "Server.Target.cs"), "w") as f:
+            f.write("// Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.\n\n")
+            f.write("using UnrealBuildTool;\nusing System.Collections.Generic;\n\n")
+            f.write("public class " + name + "ServerTarget : TargetRules {\n")
+            f.write("    public " + name + "ServerTarget(TargetInfo Target) : base(Target) {\n")
+            f.write("        Type = TargetType.Server;\n")
+            f.write("        DefaultBuildSettings = BuildSettingsVersion.V2;\n")
+            f.write("        ExtraModuleNames.Add(\"" + name + "\");\n")
+            f.write("    }\n")
+            f.write("}\n")
+
+    # Delete old files for update
+    if args.update:
+        # Get which files are in Unreal Collaboration
+        ucfiles = []
+        for ucfile in list(Path(os.path.join("Source", "UnrealCollaboration")).rglob("*")):
+            ucfiles.append(ucfile)
+
+        # Delete them
+        for file in list(Path(os.path.join(args.path, "Source", name)).rglob("*")):
+            if file in ucfiles:
+                if os.path.isdir(file):
+                    os.rmdir(file)
+                elif os.path.isfile(file):
+                    os.remove(file)
 
     # Copy files from UnrealCollaboration -> Project
     copy_tree("Source/UnrealCollaboration", os.path.join(args.path, "Source", name))
@@ -73,25 +89,26 @@ if __name__ == "__main__":
 
     # Input the things we need to into Config
     # DefaultEngine -> [HTTP] & [CoreRedirects]
-    with open(os.path.join(args.path, "Config/DefaultEngine.ini"), "a") as f:
-        # Write redirects
-        f.write("\n[CoreRedirects]\n")
-        f.write("+ClassRedirects=(MatchSubstring=True,OldName=\"/UnrealCollaboration\",NewName=\"/" + name + "\")\n")
-        f.write("+EnumRedirects=(MatchSubstring=True,OldName=\"/UnrealCollaboration\",NewName=\"/" + name + "\")\n")
-        f.write("+FunctionRedirects=(MatchSubstring=True,OldName=\"/UnrealCollaboration\",NewName=\"/" + name + "\")\n")
-        f.write("+StructRedirects=(MatchSubstring=True,OldName=\"/UnrealCollaboration\",NewName=\"/" + name + "\")\n")
+    if not args.update:
+        with open(os.path.join(args.path, "Config/DefaultEngine.ini"), "a") as f:
+            # Write redirects
+            f.write("\n[CoreRedirects]\n")
+            f.write("+ClassRedirects=(MatchSubstring=True,OldName=\"/UnrealCollaboration\",NewName=\"/" + name + "\")\n")
+            f.write("+EnumRedirects=(MatchSubstring=True,OldName=\"/UnrealCollaboration\",NewName=\"/" + name + "\")\n")
+            f.write("+FunctionRedirects=(MatchSubstring=True,OldName=\"/UnrealCollaboration\",NewName=\"/" + name + "\")\n")
+            f.write("+StructRedirects=(MatchSubstring=True,OldName=\"/UnrealCollaboration\",NewName=\"/" + name + "\")\n")
 
-        # Write HTTP
-        f.write("\n[HTTP]\n")
-        f.write("HttpTimeout=300\n")
-        f.write("HttpConnectionTimeout=-1\n")
-        f.write("HttpReceiveTimeout=-1\n")
-        f.write("HttpSendTimeout=-1\n")
-        f.write("HttpMaxConnectionsPerServer=16\nbEnableHttp=true\nbUseNullHttp=false\n")
-        f.write("HttpDelayTime=0")
+            # Write HTTP
+            f.write("\n[HTTP]\n")
+            f.write("HttpTimeout=300\n")
+            f.write("HttpConnectionTimeout=-1\n")
+            f.write("HttpReceiveTimeout=-1\n")
+            f.write("HttpSendTimeout=-1\n")
+            f.write("HttpMaxConnectionsPerServer=16\nbEnableHttp=true\nbUseNullHttp=false\n")
+            f.write("HttpDelayTime=0")
 
     # Include inputs if asked
-    if args.inputs:
+    if args.inputs and not args.update:
         with open(os.path.join(args.path, "Config/DefaultInput.ini"), "a") as f:
             # Write actions
             write_action(f, "Jump", "SpaceBar")
@@ -126,19 +143,24 @@ if __name__ == "__main__":
     os.remove(os.path.join(args.path, "Source", name + "/UnrealCollaboration.h"))
 
     # Edit Project.Build.cs
-    with open(os.path.join(args.path, "Source", name + "/" + name + ".Build.cs"), "w") as f:
-        f.write("// Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.\n\n")
-        f.write("using UnrealBuildTool;\n\n")
-        f.write("public class " + name + " : ModuleRules {\n")
-        f.write("    public " + name + "(ReadOnlyTargetRules Target) : base(Target) {\n")
-        f.write("        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;\n\n")
-        f.write("        // List packaged used\n")
-        f.write("        PublicDependencyModuleNames.AddRange(new string[] { \"Core\", \"CoreUObject\", \"Engine\", \"InputCore\", \"HeadMountedDisplay\", \"Http\", \"Json\", \"JsonUtilities\", \"UMG\", \"Slate\", \"SlateCore\" });\n")
-        f.write("    }\n")
-        f.write("}\n")
+    if not args.update:
+        with open(os.path.join(args.path, "Source", name + "/" + name + ".Build.cs"), "w") as f:
+            f.write("// Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.\n\n")
+            f.write("using UnrealBuildTool;\n\n")
+            f.write("public class " + name + " : ModuleRules {\n")
+            f.write("    public " + name + "(ReadOnlyTargetRules Target) : base(Target) {\n")
+            f.write("        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;\n\n")
+            f.write("        // List packaged used\n")
+            f.write("        PublicDependencyModuleNames.AddRange(new string[] { \"Core\", \"CoreUObject\", \"Engine\", \"InputCore\", \"HeadMountedDisplay\", \"Http\", \"Json\", \"JsonUtilities\", \"UMG\", \"Slate\", \"SlateCore\" });\n")
+            f.write("    }\n")
+            f.write("}\n")
 
     # Should be us almost all done!
-    print("Completed importing!")
-    print("Please rebuild VS project files...")
-    print("Including starter content? Please migrate from Unreal Collaboration - https://www.ue4community.wiki/Legacy/Migrate_content_between_projects")
-    print("Please read documentation to use UnrealCollaboration within your project!")
+    if not args.update:
+        print("Completed importing!")
+        print("Please rebuild VS project files...")
+        print("Including starter content? Please migrate from Unreal Collaboration - https://www.ue4community.wiki/Legacy/Migrate_content_between_projects")
+        print("Please read documentation to use UnrealCollaboration within your project!")
+    else:
+        print("Completed updating!")
+        print("Please rebuild VS project files...")
