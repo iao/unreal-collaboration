@@ -49,6 +49,7 @@ void ABaseNetworkCharacter::BeginPlay() {
 	// Spawn the text actor
 	if (GetLocalRole() == ROLE_Authority) {
 		TextActor = GetWorld()->SpawnActor<ANetworkTextRenderActor>(TextActorClass->GetAuthoritativeClass(), BoxComponent->GetComponentLocation(), BoxComponent->GetComponentRotation());
+		TextActor->AttachToComponent(BoxComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, false));
 	}
 		
 	// Request info from Unreal Selector
@@ -142,10 +143,7 @@ bool ABaseNetworkCharacter::ServerChange_Validate(FInfoStruct_Response response)
 void ABaseNetworkCharacter::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
 
-	// Have the text actor follow the player
 	if (GetLocalRole() == ROLE_Authority) {
-		if(TextActor) TextActor->SetActorLocation(GetActorLocation() + BoxComponent->GetRelativeLocation());
-
 		// Slow down when not jumping
 		if (!bWasJumping && GetMovementComponent()->Velocity.Z > 1.5f) {
 			GetMovementComponent()->Velocity.Z -= GetMovementComponent()->GetMaxSpeed();

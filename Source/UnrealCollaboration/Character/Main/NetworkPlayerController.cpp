@@ -127,7 +127,7 @@ bool ANetworkPlayerController::ServerSpawn_Validate() {
 }
 
 bool ANetworkPlayerController::ServerDelete_Validate() {
-	return isAdmin;
+	return true;
 }
 
 // Called when isPawn replicates

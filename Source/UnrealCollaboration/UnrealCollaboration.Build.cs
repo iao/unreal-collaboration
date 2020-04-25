@@ -7,6 +7,6 @@ public class UnrealCollaboration : ModuleRules {
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		// List of packages we use
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "Http", "Json", "JsonUtilities" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "Http", "Json", "JsonUtilities", "UMG", "Slate", "SlateCore" });
 	}
 }

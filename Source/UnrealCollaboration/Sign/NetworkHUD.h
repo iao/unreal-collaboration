@@ -31,6 +31,10 @@ public:
 	void SetVisible(bool visible);
 
 protected:
+	/** If the selector controls deletion */
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = TextInfo)
+		bool useSelectorControl = false;
+	
 	/** The maximum allowed text size */
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = TextInfo)
 		int32 MaximumTextSize = 100;

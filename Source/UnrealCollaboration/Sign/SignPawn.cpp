@@ -46,6 +46,7 @@ void ASignPawn::BeginPlay() {
 	// If we are the server, then spawn the text actor
 	if (GetLocalRole() == ROLE_Authority) {
 		TextActor = GetWorld()->SpawnActor<ANetworkTextRenderActor>(TextActorClass->GetAuthoritativeClass(), BoxComponent->GetComponentLocation(), BoxComponent->GetComponentRotation());
+		TextActor->AttachToComponent(BoxComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, false));
 		TextActor->text = FText::FromString(DefaultText);
 	}
 	

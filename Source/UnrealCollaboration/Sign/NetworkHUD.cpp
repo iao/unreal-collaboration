@@ -46,8 +46,8 @@ void ANetworkHUD::SetVisible(bool visible) {
 				else PlayerUI->TheBox->SetText(FText::FromString(""));
 			} else PlayerUI->TheBox->SetText(FText::FromString(""));
 
-			// Set the delete button to show based on the selector authority in the controller
-			PlayerUI->DeleteButton->SetVisibility(fromBoolean(controller->HasSelectorAuthority()));
+			// Allow the player to delete the sign at anytime
+			PlayerUI->DeleteButton->SetVisibility(fromBoolean(useSelectorControl ? controller->HasSelectorAuthority() : true));
 		}
 	}
 }
@@ -73,7 +73,7 @@ void ANetworkHUD::Confirm() {
 
 // Called when the delete button is pressed
 void ANetworkHUD::Delete() {
-	// NOTE: This is only allowed when controller->HasSelectorAuthority() is true :)
+	// NOTE: If selector control is enabled, this is only allowed when controller->HasSelectorAuthority() is true :)
 	ANetworkPlayerController* controller = Cast<ANetworkPlayerController>(GetOwningPlayerController());
 	controller->Delete();
 }

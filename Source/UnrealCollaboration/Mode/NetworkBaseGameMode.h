@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "UnrealCollaboration/Character/VR/VRNetworkCharacter.h"
-#include "UnrealCollaboration/Character/VR/VRNetworkPlayerController.h"
-#include "UnrealCollaboration/Character/Main/NetworkCharacter.h"
-#include "UnrealCollaboration/Character/Main/NetworkPlayerController.h"
+#include "../Character/VR/VRNetworkCharacter.h"
+#include "../Character/VR/VRNetworkPlayerController.h"
+#include "../Character/Main/NetworkCharacter.h"
+#include "../Character/Main/NetworkPlayerController.h"
 #include "NetworkBaseGameMode.generated.h"
 
 UCLASS()

@@ -37,6 +37,15 @@ For our functionality with [Unreal Selector](https://gitlab.donald108.com/univer
 * Client connecting to server: The client finds the server IP address through Unreal Selector, and uses that IP address to connect.
 * Client connecting to Unreal Selector writes a file (`Content/info.json`) containing its URL, the title of the game, the uses unreal selector session & the port the server is on.
 
+### Exporting to existing project
+**Ensure your project is built to support C++ & has recently been ran**
+Run the following to improve Unreal Collaboration to your existing project, where `${PATH}` the path to the root project directory you want to include Unreal Collaboration in:
+```
+python Scripts/merger.py "${PATH}"
+```
+
+*Note*: You can add `--no-add-inputs` for our inputs to not be added by default
+
 ### Notes for Testing
 #### Multiplayer
 When testing multiplayer, you should ensure that `Dedicated Server` is on - unless you want to *see* what is going on in the server, where you should turn off `Dedicated Server`, and set the number of players to >1.
