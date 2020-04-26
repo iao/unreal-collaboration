@@ -111,6 +111,9 @@ void ABaseNetworkCharacter::Change(FInfoStruct_Response response) {
 		rank = response.rank;
 		isAdmin = response.isAdmin;
 
+		// Allow the client to call blueprints if given
+		if(ClientUponInfoChangedEventCalled) UponInfoChanged();
+
 		// Let Blueprint know, then update the server
 		ServerChange(response);
 	}

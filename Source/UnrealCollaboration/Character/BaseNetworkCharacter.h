@@ -36,6 +36,10 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = SpawnInfo)
 		TSubclassOf<ANetworkTextRenderActor> TextActorClass;
 	
+	/** Should clients call uponinfochanged? */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInfo)
+		bool ClientUponInfoChangedEventCalled;
+
 	/** A default customization int from Unreal Selector */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerInfo)
 		int DefaultInfo = 1;
