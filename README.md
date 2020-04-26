@@ -41,6 +41,40 @@ For our functionality with [Unreal Selector](https://gitlab.donald108.com/univer
 * Client connecting to server: The client finds the server IP address through Unreal Selector, and uses that IP address to connect.
 * Client connecting to Unreal Selector writes a file (`Content/info.json`) containing its URL, the title of the game, the uses unreal selector session & the port the server is on.
 
+### Inputs we use
+Each of the following inputs must be bound to commmunicate with Unreal Collaboration, these are added automatically with `merger.py`. The following also shows the recommended bindings for these:
+
+#### Actions
+* `Jump` - Space Bar
+* `Jump` - Vice Left Trigger Click
+* `Spawn` - E
+* `ResetVR` - R
+* `ResetVR` - Vive Left Grip Click
+* `ResetVR` - Vive Right Grip Click
+* `Hide` - End
+* `Hide` - Vive Left Menu Click
+* `Hide` - Vive Right Menu Click
+* `TurnLeft` - Vive Left Trackpad Left
+* `TurnLeft` - Vive Right Trackpad Left
+* `TurnRight` - Vive Left Trackpad Right
+* `TurnRight` - Vive Right Trackpad Right
+* `Quit` - Escape
+* `Quit` - Vice Left System Click
+* `Quit` - Vice Right System Click
+
+#### Axes
+*Note*: recommended scale is also given here
+* `MoveForward` - W (Scale 1)
+* `MoveForward` - S (Scale -1)
+* `MoveRight` - A (Scale -1)
+* `MoveRight` - D (Scale 1)
+* `Move` - Vive Right Trigger Click (Scale 1)
+* `Turn` - MouseX (Scale 1)
+* `Lookup` - MouseY (Scale -1)
+
+### Custom Integration
+Unreal Collaboration has been included with the `VRExhibit` project containing Helmsdale, Abernathy & Caen. Due to the extremly large file size of this project, I have been unable to include it fully. However, I have included the Blueprints created along with the custom code written for integration with the project in `VRExhibit` (custom code was needed since the actor skeletal mesh could change from integration with Unreal Selector).
+
 ### Exporting to existing project
 #### First Time export
 Please follow the following steps to add Unreal Collaboration to your project:
