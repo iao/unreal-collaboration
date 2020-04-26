@@ -23,6 +23,7 @@ To build an **Unreal Collaboration** server, please do the following:
 #### Client
 1. Compile & run the project using the `Development Editor` build
 2. Package the project for the target client architecture(s), save in a known location (e.g. `Build`) using File -> Package Project in the editor
+3. If you are using **Linux**, rename the file at `Build/${OS_NAME}NoEditor/${PROJECT_NAME}/Binaries/${OS_NAME}/${PROJECT_NAME}` from `${PROJECT_NAME}` to `${PROJECT_NAME}.out` (e.g. `Helmsdale` -> `Helmsdale.out`)
 3. Move the *contents* of `Build/${OS_NAME}NoEditor/` to its own folder (***the name of this folder should be the name of the final project***), which can be used for client distrubution (by zipping it).
 
 #### Server
@@ -32,6 +33,7 @@ To build an **Unreal Collaboration** server, please do the following:
 4. Right click on the solution, and click Build
 5. Setup execute permissions of the server in `Binaries/${OS_NAME}/${PROJECT_NAME}Server`
 6. Move the built server executable from `Binaries/${OS_NAME}/${PROJECT_NAME}Server` to `Build/${OS_NAME}NoEditor/${UNREAL_PROJECT_NAME}/Binaries/${OS_NAME}/`
+4. If you are using **Linux**, rename the build server executable from `${PROJECT_NAME}Server` to `${PROJECT_NAME}Server.out` (e.g. `HelmsdaleServer` -> `HelmsdaleServer.out`)
 7. Move the *contents* of `Build/${OS_NAME}NoEditor/` to its own folder (***the name of this folder should be the name of the final project***), which can be used for server distrubution.
 
 ### Connections we use
