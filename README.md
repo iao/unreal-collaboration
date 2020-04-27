@@ -15,7 +15,8 @@ To build an **Unreal Collaboration** server, please do the following:
     * Setup the Gamemode to use a Blueprinted extension of `NetworkBaseGameMode`, setting the default HUD to be a Blueprinted extensions of `NetworkHUD`
     * Set the required character & player controller subclasses within the bgamemode blueprint to point to blueprinted extensions of the required classes
     * Setup an empty world called *Transation*, and ensure it has been built
-    * Select the transition level to be *Transition* within *Project Settings*, ensure it & your main world are going to be cooked
+    * Select the transition level to be *Transition* within *Project Settings -> Maps & Mode*, ensure it & your main world are going to be cooked
+    * Ensure only the transition level & the server map are packed by adding the *List of maps to include in a packaged build* within *Project Settings -> Packaging Settings*
     * Everything should be setup to allow for cooking (for example, one should not be referening `UBlueprint` within code as these are not explicitly packaged (only the generared code is) and instead should use Blueprints to select the Blueprint to use)
 2. Follow the instructions below to package the project for client or server use.
 3. If project is going to be deployed using [Unreal Selector](https://gitlab.donald108.com/university/unreal-selector), follow the steps outlined there to add the project.
@@ -32,7 +33,7 @@ To build an **Unreal Collaboration** server, please do the following:
 3. Back in the project solution, select `Development Server`
 4. Right click on the solution, and click Build
 5. Setup execute permissions of the server in `Binaries/${OS_NAME}/${PROJECT_NAME}Server`
-6. Move the built server executable from `Binaries/${OS_NAME}/${PROJECT_NAME}Server` to `Build/${OS_NAME}NoEditor/${UNREAL_PROJECT_NAME}/Binaries/${OS_NAME}/`
+6. Move the built server executable from `Binaries/${OS_NAME}/${PROJECT_NAME}Server` to `Build/${OS_NAME}NoEditor/${PROJECT_NAME}/Binaries/${OS_NAME}/`
 4. If you are using **Linux**, rename the build server executable from `${PROJECT_NAME}Server` to `${PROJECT_NAME}Server.out` (e.g. `HelmsdaleServer` -> `HelmsdaleServer.out`)
 7. Move the *contents* of `Build/${OS_NAME}NoEditor/` to its own folder (***the name of this folder should be the name of the final project***), which can be used for server distrubution.
 
@@ -111,4 +112,4 @@ You may consider turning off `Use Single Process` in advanced play settings, ens
 #### Virtual Reality
 When testing in VR, ensure that `Use Single Process` is off initially. After launching, you can turn `Use Single Process` back on - however there will be no VR display. To get it displayed, start play again.
 Starting with `Use Single Process` on crashes one of the rendering threads (`SharedPointer.h:851` will fail its assertion) and gives you no information of what happened (apart from `DepthSwapChain` was `NULL`).
-You can also try another round-about method, but this doesn't always work: launch the game with `Use Single Process` on, allow the main process to crash, and *without changing code* relaunch and close the new server that is created.
+You can also try another round-about method, but this doesn't always work: launch the game with `Use Single Process` on, allow the main process to crash, and *without changing code* relaunch and close the new server that is created. Additionally, one should use a custom VR Gamemode instead of using the switching gamemode as this gamemode only launches on the client that *doesn't* have VR control. Please run VR in a networked setup for full support.
